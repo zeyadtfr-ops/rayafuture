@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-tajawal);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-amiri);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Raya brand palette */
+  --color-raya-dark: #0A382F;
+  --color-raya-mid: #115B46;
+  --color-raya-orange: #E69744;
+  --color-raya-cream: #FBF4ED;
+  --color-raya-sage: #E9F2EB;
+  --color-raya-deep: #063528;
+  --color-raya-light-orange: #FFF0DF;
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Light mode based on Raya cream/forest palette */
+  --background: #FBF4ED;
+  --foreground: #0A382F;
+  --card: #FFFFFF;
+  --card-foreground: #0A382F;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A382F;
+  --primary: #0A382F;
+  --primary-foreground: #FBF4ED;
+  --secondary: #E9F2EB;
+  --secondary-foreground: #0A382F;
+  --muted: #E9F2EB;
+  --muted-foreground: #5A6B66;
+  --accent: #E69744;
+  --accent-foreground: #FFFFFF;
+  --destructive: #B91C1C;
+  --border: #D9E2DC;
+  --input: #E9F2EB;
+  --ring: #E69744;
+  --chart-1: #0A382F;
+  --chart-2: #115B46;
+  --chart-3: #E69744;
+  --chart-4: #8FB3A8;
+  --chart-5: #C77B2E;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0A382F;
+  --sidebar-primary: #0A382F;
+  --sidebar-primary-foreground: #FBF4ED;
+  --sidebar-accent: #E9F2EB;
+  --sidebar-accent-foreground: #0A382F;
+  --sidebar-border: #D9E2DC;
+  --sidebar-ring: #E69744;
+}
+
+.dark {
+  --background: #06241D;
+  --foreground: #FBF4ED;
+  --card: #0A382F;
+  --card-foreground: #FBF4ED;
+  --popover: #0A382F;
+  --popover-foreground: #FBF4ED;
+  --primary: #E69744;
+  --primary-foreground: #0A382F;
+  --secondary: #115B46;
+  --secondary-foreground: #FBF4ED;
+  --muted: #115B46;
+  --muted-foreground: #B5C7C1;
+  --accent: #E69744;
+  --accent-foreground: #0A382F;
+  --destructive: #F87171;
+  --border: #1F4D40;
+  --input: #115B46;
+  --ring: #E69744;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "kern";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #E9F2EB;
+}
+::-webkit-scrollbar-thumb {
+  background: #0A382F;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #115B46;
+}
+
+/* Arabic display heading style */
+.heading-display {
+  font-family: var(--font-amiri), serif;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+/* Subtle entrance animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.7s ease-out both;
+}
+
+@keyframes slowZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.slow-zoom {
+  animation: slowZoom 18s ease-out forwards;
+}
+
+/* Decorative arabesque divider */
+.divider-arabesque {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #E69744 50%, transparent);
+}
