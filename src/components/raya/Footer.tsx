@@ -72,8 +72,9 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-white/65 text-sm leading-relaxed mb-5 max-w-sm">
-              مجلة طلابية إلكترونية تابعة لمعهد راية العالي، تجمع الصوت المؤسسي بالحياة
-              الطلابية، وتحوّل الأنشطة والإنجازات إلى أرشيف حيّ يمكن الرجوع إليه وتطويره.
+              معهد راية العالي للإدارة والتجارة الخارجية — صرح تعليمي تحت إشراف وزارة
+              التعليم العالي، تأسس بالقرار الوزاري رقم ٤١٥١ لسنة ٢٠١٨، ويمنح درجة البكالوريوس
+              في التجارة المعادلة لدرجات الجامعات المصرية.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -128,17 +129,21 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-white/65">
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-[#E69744] mt-0.5 flex-shrink-0" />
-                <span>معهد راية العالي — القاهرة، جمهورية مصر العربية</span>
+                <span>دمياط الجديدة، الحي الثاني، أمام نادي المستقبل</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-[#E69744] flex-shrink-0" />
-                <a href="mailto:magazine@raya.edu" className="hover:text-[#E69744]">
-                  magazine@raya.edu
+                <a href="mailto:rayaedu2@gmail.com" className="hover:text-[#E69744]">
+                  rayaedu2@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-[#E69744] flex-shrink-0" />
-                <span dir="ltr">+20 2 0000 0000</span>
+                <span dir="ltr">+20 10 3083 0822</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-[#E69744] flex-shrink-0" />
+                <span dir="ltr">واتساب: +20 10 3083 0811</span>
               </li>
             </ul>
           </div>

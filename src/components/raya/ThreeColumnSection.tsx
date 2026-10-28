@@ -36,15 +36,15 @@ export default function ThreeColumnSection() {
         <div className="text-center mb-14 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 text-[#E69744] text-sm font-bold tracking-wider mb-3 justify-center">
             <span className="w-8 h-0.5 bg-[#E69744]" />
-            من حياة المعهد
+            البرامج الأكاديمية
             <span className="w-8 h-0.5 bg-[#E69744]" />
           </div>
           <h2 className="heading-display text-white text-4xl md:text-5xl mb-4">
-            إنجازات.. ومبادرات.. ومسيرة أكاديمية
+            برامج بكالوريوس معتمدة في التجارة وإدارة الأعمال
           </h2>
           <p className="text-white/70 text-base leading-relaxed">
-            مساحة موثَّقة لتكريم الطلاب المتميزين، ومتابعة أنشطة اتحاد الطلاب، ومراجعة
-            أهم المحطات في التقويم الأكاديمي للمعهد.
+            يقدم معهد راية العالي للإدارة والتجارة الخارجية ثلاث برامج بكالوريوس معتمدة
+            من وزارة التعليم العالي، تمنح درجة معادلة لدرجات الجامعات المصرية بعد أربعة مستويات دراسية.
           </p>
         </div>
 
@@ -74,24 +74,24 @@ export default function ThreeColumnSection() {
               </svg>
               <div className="relative h-full flex flex-col items-center justify-center text-white">
                 <Award className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">+٣٠</div>
-                <div className="text-[11px] text-white/80">طالباً مكرَّماً هذا العام</div>
+                <div className="heading-display text-3xl">ACC</div>
+                <div className="text-[11px] text-white/80">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 
             <div className="p-6">
               <h3 className="heading-display text-white text-2xl mb-3 flex items-center gap-2">
-                إنجازات الطلاب
+                بكالوريوس المحاسبة والمراجعة
               </h3>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
-                تكريمات، مشاركات بحثية، جوائز، ومشروعات طلابية متميزة. نرصد هنا مسيرة
-                الطلاب الذين رفعوا اسم المعهد في محافل علمية وثقافية ورياضية متعددة.
+                برنامج متخصص يركز على إعداد خريجين متميزين في المحاسبة المالية والمراجعة
+                وأخلاقيات المهنة، مع التركيز على المعايير المحاسبية الدولية والممارسات الحديثة.
               </p>
               <ul className="space-y-2 mb-5">
                 {[
-                  "المركز الأول في مسابقة الابتكار التقني",
-                  "مشاركة بحثية في مؤتمر نظم المعلومات",
-                  "تكريم الطلاب الأوائل على الدفعات",
+                  "١٣٢ ساعة معتمدة على ٤ مستويات دراسية",
+                  "محاسبة مالية ومراجعة ومعايير دولية",
+                  "فرص عمل في مكاتب المحاسبة والشركات",
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-white/80 text-[13px]">
                     <CheckCircle2 className="h-4 w-4 text-[#E69744] mt-0.5 flex-shrink-0" />
@@ -103,7 +103,7 @@ export default function ThreeColumnSection() {
                 href="#"
                 className="inline-flex items-center text-[#E69744] font-bold text-sm hover:text-white transition-colors"
               >
-                عرض كل الإنجازات
+                تفاصيل البرنامج
                 <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
               </a>
             </div>
@@ -134,22 +134,22 @@ export default function ThreeColumnSection() {
               </svg>
               <div className="relative h-full flex flex-col items-center justify-center text-white">
                 <Users2 className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">٧ أسر</div>
-                <div className="text-[11px] text-white/80">ولجنة نشاط طلابي</div>
+                <div className="heading-display text-3xl">FT</div>
+                <div className="text-[11px] text-white/80">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 
             <div className="p-6">
-              <h3 className="heading-display text-white text-2xl mb-3">اتحاد الطلاب</h3>
+              <h3 className="heading-display text-white text-2xl mb-3">بكالوريوس اقتصاديات التجارة الخارجية</h3>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
-                الأسر والأنشطة والمبادرات والتطوع والرحلات. مساحة لحياة الطلاب خارج
-                قاعات الدراسة، حيث تتشكَّل الذاكرة الجماعية للمعهد عاماً بعد عام.
+                برنامج يُعِدّ الطالب للعمل في مجالات التجارة الخارجية والعلاقات الاقتصادية
+                الدولية، مع التركيز على التصدير والاستيراد والأسواق العالمية واتفاقيات التجارة الحرة.
               </p>
               <ul className="space-y-2 mb-5">
                 {[
-                  "أسر علمية وثقافية وفنية متخصصة",
-                  "مبادرات تطوعية ومشاركة مجتمعية",
-                  "تنظيم الفعاليات والمؤتمرات الطلابية",
+                  "١٣٢ ساعة معتمدة على ٤ مستويات دراسية",
+                  "تجارة دولية وعلاقات اقتصادية",
+                  "فرص في شركات التصدير والغرف التجارية",
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-white/80 text-[13px]">
                     <CheckCircle2 className="h-4 w-4 text-[#E69744] mt-0.5 flex-shrink-0" />
@@ -161,7 +161,7 @@ export default function ThreeColumnSection() {
                 href="#"
                 className="inline-flex items-center text-[#E69744] font-bold text-sm hover:text-white transition-colors"
               >
-                تعرَّف على الأسر
+                تفاصيل البرنامج
                 <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
               </a>
             </div>
@@ -191,31 +191,26 @@ export default function ThreeColumnSection() {
               </svg>
               <div className="relative h-full flex flex-col items-center justify-center text-[#0A382F]">
                 <CalendarDays className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">٢٠٢٦/٢٠٢٧</div>
-                <div className="text-[11px] text-[#0A382F]/70">العام الأكاديمي الحالي</div>
+                <div className="heading-display text-3xl">BIS</div>
+                <div className="text-[11px] text-[#0A382F]/70">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 
             <div className="p-6">
-              <h3 className="heading-display text-white text-2xl mb-3">التقويم الأكاديمي</h3>
+              <h3 className="heading-display text-white text-2xl mb-3">بكالوريوس نظم معلومات الأعمال</h3>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
-                أهم المحطات الأكاديمية للعام الدراسي: بداية الفصول، الامتحانات،
-                الإجازات، ومواعيد التسجيل. خط زمني منظم يربط الطالب بمسيرته الدراسية.
+                برنامج يجمع بين مقررات الإدارة وتكنولوجيا المعلومات، يُعِدّ خريجين قادرين
+                على توظيف نظم المعلومات في حل المشكلات الإدارية وتطوير الأعمال والتحول الرقمي.
               </p>
               <ul className="space-y-2 mb-5">
                 {[
-                  { d: "١٥ نوفمبر", t: "بداية التسجيل للفصل الثاني" },
-                  { d: "٢٥ ديسمبر", t: "بداية امتحانات نهاية الفصل" },
-                  { d: "١٠ يناير", t: "إعلان نتائج الفصل الأول" },
-                ].map((ev, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between gap-2 text-white/80 text-[13px] border-b border-white/10 pb-1.5"
-                  >
-                    <span>{ev.t}</span>
-                    <span className="text-[#E69744] font-bold text-[11px] whitespace-nowrap">
-                      {ev.d}
-                    </span>
+                  "١٣٢ ساعة معتمدة على ٤ مستويات دراسية",
+                  "دمج بين الإدارة وتكنولوجيا المعلومات",
+                  "فرص في شركات التحول الرقمي والبيانات",
+                ].map((t, i) => (
+                  <li key={i} className="flex items-start gap-2 text-white/80 text-[13px]">
+                    <CheckCircle2 className="h-4 w-4 text-[#E69744] mt-0.5 flex-shrink-0" />
+                    {t}
                   </li>
                 ))}
               </ul>
@@ -223,7 +218,7 @@ export default function ThreeColumnSection() {
                 href="#"
                 className="inline-flex items-center text-[#E69744] font-bold text-sm hover:text-white transition-colors"
               >
-                التقويم الكامل
+                تفاصيل البرنامج
                 <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
               </a>
             </div>

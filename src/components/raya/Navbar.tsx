@@ -40,9 +40,9 @@ export default function Navbar() {
       <div className="hidden md:block border-b border-white/10 bg-[#063528]">
         <div className="container mx-auto px-4 flex items-center justify-between py-2 text-[12px] text-white/70">
           <div className="flex items-center gap-4">
-            <span>معهد راية العالي</span>
+            <span>معهد راية العالي للإدارة والتجارة الخارجية</span>
             <span className="opacity-40">|</span>
-            <span>العدد الأول — أكتوبر ٢٠٢٦</span>
+            <span>تحت إشراف وزارة التعليم العالي</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="opacity-70">تابعنا:</span>

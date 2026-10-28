@@ -35,9 +35,9 @@ export default function BottomSection() {
               <div className="relative h-full flex flex-col items-center justify-center p-8 text-center text-white">
                 <Quote className="h-10 w-10 text-[#E69744] mb-4" />
                 <p className="heading-display text-2xl leading-relaxed mb-4">
-                  «من قاعة الدراسة إلى أول وظيفة.. قصة لم تنتهِ بعد»
+                  «من قاعة الدراسة إلى سوق العمل.. صرح تعليمي معتمد يُعِدّ قادة المستقبل»
                 </p>
-                <div className="text-[12px] text-white/70">قصة نجاح — خريج راية</div>
+                <div className="text-[12px] text-white/70">معهد راية العالي للإدارة والتجارة الخارجية</div>
               </div>
             </div>
 
@@ -45,21 +45,21 @@ export default function BottomSection() {
             <div className="md:w-3/5 p-7">
               <div className="inline-flex items-center gap-2 text-[#E69744] text-xs font-bold tracking-wider mb-3">
                 <Star className="h-4 w-4" />
-                قصص نجاح
+                اعتماد وتميز
               </div>
               <h3 className="heading-display text-[#0A382F] text-2xl mb-3 leading-snug">
-                خرِّيجو راية.. مسارات مهنية تُلهم
+                اعتماد أكاديمي ومسيرة متميزة
               </h3>
               <p className="text-[#5A6B66] text-sm leading-relaxed mb-5">
-                نروي قصص خريجي المعهد الذين بنوا مسارات مهنية متميزة بعد التخرج،
-                والدروس المستفادة من تجاربهم. مساحة للتواصل بين الأجيال، ولإثبات
-                أن رحلة التعلم لا تنتهي بشهادة.
+                معهد راية العالي معتمد من الهيئة القومية لضمان جودة التعليم والاعتماد،
+                تحت إشراف وزارة التعليم العالي والبحث العلمي. تأسس بالقرار الوزاري رقم ٤١٥١ لسنة ٢٠١٨،
+                ويمنح درجة البكالوريوس في التجارة المعادلة لدرجات الجامعات المصرية.
               </p>
               <div className="space-y-2 mb-5">
                 {[
-                  "أحمد سمير — محلل بيانات في شركة تقنية رائدة",
-                  "نورهان خالد — محاسبة في مكتب استشاري دولي",
-                  "محمد طارق — مؤسس مشروع ناشئ في التجارة الإلكترونية",
+                  "اعتماد الهيئة القومية لضمان جودة التعليم",
+                  "إشراف وزارة التعليم العالي والبحث العلمي",
+                  "القرار الوزاري رقم ٤١٥١ لسنة ٢٠١٨",
                 ].map((s, i) => (
                   <div
                     key={i}
@@ -76,7 +76,7 @@ export default function BottomSection() {
                 className="border-[#0A382F] text-[#0A382F] hover:bg-[#0A382F] hover:text-[#FBF4ED] rounded-md h-10 px-4 font-bold text-sm"
               >
                 <a href="#">
-                  اقرأ القصص
+                  المزيد عن المعهد
                   <ArrowLeft className="h-4 w-4 mr-1" />
                 </a>
               </Button>
