@@ -76,7 +76,16 @@ export default function Footer() {
               الطلابية، وتحوّل الأنشطة والإنجازات إلى أرشيف حيّ يمكن الرجوع إليه وتطويره.
             </p>
             <div className="flex items-center gap-3">
-              {[Facebook, Instagram, Linkedin, Youtube].map((Icon, i) => (
+              <a
+                href="https://www.facebook.com/share/1Duv3juc3d/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="h-9 w-9 rounded-full bg-white/5 hover:bg-[#E69744] flex items-center justify-center transition-colors"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              {[Instagram, Linkedin, Youtube].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"

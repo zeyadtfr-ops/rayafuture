@@ -46,7 +46,16 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             <span className="opacity-70">تابعنا:</span>
-            {[Facebook, Linkedin, Youtube].map((Icon, i) => (
+            <a
+              href="https://www.facebook.com/share/1Duv3juc3d/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="text-white/70 hover:text-[#E69744] transition-colors"
+            >
+              <Facebook className="h-4 w-4" />
+            </a>
+            {[Linkedin, Youtube].map((Icon, i) => (
               <a
                 key={i}
                 href="#"
