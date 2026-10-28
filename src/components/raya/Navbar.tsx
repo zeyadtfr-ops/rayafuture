@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X, Search, Facebook, Linkedin, Youtube, Send } from "lucide-react";
+import { Menu, X, Search, Facebook, Instagram, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ export default function Navbar() {
             >
               <Facebook className="h-4 w-4" />
             </a>
-            {[Linkedin, Youtube].map((Icon, i) => (
+            {[Instagram].map((Icon, i) => (
               <a
                 key={i}
                 href="#"

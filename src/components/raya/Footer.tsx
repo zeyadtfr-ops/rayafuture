@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Send, Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -85,7 +85,7 @@ export default function Footer() {
               >
                 <Facebook className="h-4 w-4" />
               </a>
-              {[Instagram, Linkedin, Youtube].map((Icon, i) => (
+              {[Instagram].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
