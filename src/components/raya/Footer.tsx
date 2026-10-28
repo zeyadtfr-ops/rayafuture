@@ -57,8 +57,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[#E69744] to-[#C77B2E] flex items-center justify-center shadow-md">
-                <span className="heading-display text-white text-2xl leading-none">ر</span>
+              <div className="h-14 w-14 rounded-full overflow-hidden shadow-md ring-2 ring-[#E69744]/40 bg-white">
+                <img
+                  src="/raya-logo.jpeg"
+                  alt="شعار راية المستقبل"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <div className="heading-display text-xl">راية المستقبل</div>

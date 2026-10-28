@@ -65,8 +65,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-[72px]">
           {/* Logo */}
           <a href="#home" className="flex items-center gap-3 group">
-            <div className="relative h-11 w-11 rounded-full bg-gradient-to-br from-[#E69744] to-[#C77B2E] flex items-center justify-center shadow-md shadow-black/20 ring-2 ring-white/10">
-              <span className="heading-display text-white text-2xl leading-none">ر</span>
+            <div className="relative h-14 w-14 rounded-full overflow-hidden shadow-md shadow-black/20 ring-2 ring-[#E69744]/40 bg-white">
+              <img
+                src="/raya-logo.jpeg"
+                alt="شعار راية المستقبل"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="heading-display text-white text-xl">راية المستقبل</span>
