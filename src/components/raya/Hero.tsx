@@ -11,8 +11,15 @@ export default function Hero() {
     >
       {/* Background layers */}
       <div className="absolute inset-0">
-        {/* Gradient base */}
-        <div className="absolute inset-0 bg-gradient-to-bl from-[#0A382F] via-[#0A382F] to-[#06241D]" />
+        {/* Real campus image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/hero-campus.jpg')",
+          }}
+        />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-bl from-[#0A382F]/95 via-[#0A382F]/85 to-[#06241D]/95" />
 
         {/* Arabesque pattern overlay */}
         <svg

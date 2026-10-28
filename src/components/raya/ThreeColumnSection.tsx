@@ -49,33 +49,21 @@ export default function ThreeColumnSection() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Card 1: Student Achievements */}
+          {/* Card 1: ACC Program */}
           <article className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:-translate-y-1">
-            {/* Top visual */}
-            <div className="relative h-44 bg-gradient-to-bl from-[#E69744] to-[#C77B2E] overflow-hidden">
-              <svg
-                className="absolute inset-0 w-full h-full opacity-[0.15]"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden
-              >
-                <defs>
-                  <pattern
-                    id="ach-pat"
-                    x="0"
-                    y="0"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path d="M20 0 L40 20 L20 40 L0 20 Z" fill="none" stroke="#FBF4ED" strokeWidth="0.5" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#ach-pat)" />
-              </svg>
+            {/* Top image */}
+            <div className="relative h-44 overflow-hidden">
+              <img
+                src="/images/program-acc.jpg"
+                alt="بكالوريوس المحاسبة والمراجعة"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A382F]/95 via-[#0A382F]/40 to-transparent" />
               <div className="relative h-full flex flex-col items-center justify-center text-white">
-                <Award className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">ACC</div>
-                <div className="text-[11px] text-white/80">١٣٢ ساعة معتمدة</div>
+                <Award className="h-12 w-12 mb-2 drop-shadow-lg" />
+                <div className="heading-display text-3xl drop-shadow-lg">ACC</div>
+                <div className="text-[11px] text-white/95 drop-shadow-lg font-bold">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 
@@ -109,33 +97,20 @@ export default function ThreeColumnSection() {
             </div>
           </article>
 
-          {/* Card 2: Student Union */}
+          {/* Card 2: FT Program */}
           <article className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:-translate-y-1">
-            <div className="relative h-44 bg-gradient-to-bl from-[#115B46] to-[#0A382F] overflow-hidden">
-              <svg
-                className="absolute inset-0 w-full h-full opacity-[0.15]"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden
-              >
-                <defs>
-                  <pattern
-                    id="union-pat"
-                    x="0"
-                    y="0"
-                    width="40"
-                    height="40"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <circle cx="20" cy="20" r="8" fill="none" stroke="#FBF4ED" strokeWidth="0.5" />
-                    <circle cx="20" cy="20" r="14" fill="none" stroke="#FBF4ED" strokeWidth="0.3" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#union-pat)" />
-              </svg>
+            <div className="relative h-44 overflow-hidden">
+              <img
+                src="/images/program-ft.jpg"
+                alt="بكالوريوس اقتصاديات التجارة الخارجية"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A382F]/95 via-[#0A382F]/40 to-transparent" />
               <div className="relative h-full flex flex-col items-center justify-center text-white">
-                <Users2 className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">FT</div>
-                <div className="text-[11px] text-white/80">١٣٢ ساعة معتمدة</div>
+                <Users2 className="h-12 w-12 mb-2 drop-shadow-lg" />
+                <div className="heading-display text-3xl drop-shadow-lg">FT</div>
+                <div className="text-[11px] text-white/95 drop-shadow-lg font-bold">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 
@@ -167,32 +142,20 @@ export default function ThreeColumnSection() {
             </div>
           </article>
 
-          {/* Card 3: Academic Calendar */}
+          {/* Card 3: BIS Program */}
           <article className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 hover:-translate-y-1">
-            <div className="relative h-44 bg-gradient-to-bl from-[#FBF4ED] to-[#E9F2EB] overflow-hidden">
-              <svg
-                className="absolute inset-0 w-full h-full opacity-[0.15]"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden
-              >
-                <defs>
-                  <pattern
-                    id="cal-pat"
-                    x="0"
-                    y="0"
-                    width="30"
-                    height="30"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path d="M0 15 L30 15 M15 0 L15 30" stroke="#0A382F" strokeWidth="0.5" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#cal-pat)" />
-              </svg>
-              <div className="relative h-full flex flex-col items-center justify-center text-[#0A382F]">
-                <CalendarDays className="h-12 w-12 mb-2" />
-                <div className="heading-display text-3xl">BIS</div>
-                <div className="text-[11px] text-[#0A382F]/70">١٣٢ ساعة معتمدة</div>
+            <div className="relative h-44 overflow-hidden">
+              <img
+                src="/images/program-bis.jpg"
+                alt="بكالوريوس نظم معلومات الأعمال"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A382F]/95 via-[#0A382F]/40 to-transparent" />
+              <div className="relative h-full flex flex-col items-center justify-center text-white">
+                <CalendarDays className="h-12 w-12 mb-2 drop-shadow-lg" />
+                <div className="heading-display text-3xl drop-shadow-lg">BIS</div>
+                <div className="text-[11px] text-white/95 drop-shadow-lg font-bold">١٣٢ ساعة معتمدة</div>
               </div>
             </div>
 

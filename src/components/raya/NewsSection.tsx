@@ -2,7 +2,6 @@
 
 import { ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type NewsItem = {
   category: string;
@@ -10,7 +9,7 @@ type NewsItem = {
   excerpt: string;
   date: string;
   days: string;
-  gradient: string;
+  image: string;
   icon: React.ReactNode;
 };
 
@@ -22,7 +21,7 @@ const NEWS: NewsItem[] = [
       "يناقش هذا المقال أبرز التحديات التي تواجه المصدرين عند التوسع في الأسواق الجديدة، مع التركيز على العلاقة بين أسعار المنتجات وأجور العمال وأثرها على التنافسية الدولية.",
     date: "أكتوبر ٢٠٢٦",
     days: "مقال حصري",
-    gradient: "from-[#0A382F] to-[#115B46]",
+    image: "/images/news-economics.jpg",
     icon: <Spark />,
   },
   {
@@ -32,7 +31,7 @@ const NEWS: NewsItem[] = [
       "يتناول هذا المقال مرحلة تحديد الرؤية والهدف من خلال تجربة جاك ويلش في تشخيص وضعية جنرال إلكتريك وتحديد رؤيته للمستقبل، ودروسها المُستفادة للقادة في المؤسسات الحديثة.",
     date: "أكتوبر ٢٠٢٦",
     days: "مقال حصري",
-    gradient: "from-[#115B46] to-[#0A382F]",
+    image: "/images/news-management.jpg",
     icon: <Quote />,
   },
   {
@@ -42,7 +41,7 @@ const NEWS: NewsItem[] = [
       "يستعرض هذا المقال استراتيجية التغيير والتحويل التي اتبعها جاك ويلش خلال رئاسته لشركة جنرال إلكتريك، ودورها في إعادة هيكلة الشركة وتحقيق نمو استثنائي على مدى عقدين.",
     date: "أكتوبر ٢٠٢٦",
     days: "حالة دراسية",
-    gradient: "from-[#E69744] to-[#C77B2E]",
+    image: "/images/news-strategy.jpg",
     icon: <Users />,
   },
   {
@@ -52,7 +51,7 @@ const NEWS: NewsItem[] = [
       "حصل معهد راية العالي للإدارة والتجارة الخارجية على اعتماد الهيئة القومية لضمان جودة التعليم والاعتماد، تحت إشراف وزارة التعليم العالي والبحث العلمي، بعد استيفاء كافة المعايير الأكاديمية.",
     date: "منذ ٢٠١٨",
     days: "إنجاز مؤسسي",
-    gradient: "from-[#115B46] to-[#0A382F]",
+    image: "/images/news-accreditation.jpg",
     icon: <Trophy />,
   },
 ];
@@ -132,41 +131,19 @@ export default function NewsSection() {
               key={i}
               className="group bg-white rounded-xl overflow-hidden shadow-sm border border-[#D9E2DC] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
             >
-              {/* Image placeholder with gradient + icon */}
-              <div
-                className={cn(
-                  "relative h-44 bg-gradient-to-bl flex items-center justify-center overflow-hidden",
-                  item.gradient
-                )}
-              >
-                {/* Pattern */}
-                <svg
-                  className="absolute inset-0 w-full h-full opacity-[0.12]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden
-                >
-                  <defs>
-                    <pattern
-                      id={`np-${i}`}
-                      x="0"
-                      y="0"
-                      width="40"
-                      height="40"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path
-                        d="M20 0 L40 20 L20 40 L0 20 Z"
-                        fill="none"
-                        stroke="#FBF4ED"
-                        strokeWidth="0.5"
-                      />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill={`url(#np-${i})`} />
-                </svg>
+              {/* Real image */}
+              <div className="relative h-44 overflow-hidden bg-[#0A382F]">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                {/* Dark gradient overlay for badge readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A382F]/60 via-transparent to-transparent" />
 
-                {/* Icon */}
-                <div className="relative text-white/90 group-hover:scale-110 transition-transform duration-500">
+                {/* Icon badge (small, top-left, decorative) */}
+                <div className="absolute bottom-3 left-3 h-10 w-10 rounded-full bg-[#E69744] flex items-center justify-center text-white shadow-lg">
                   {item.icon}
                 </div>
 
@@ -176,7 +153,7 @@ export default function NewsSection() {
                 </div>
 
                 {/* Date badge */}
-                <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white/90 text-[10px] bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                <div className="absolute top-3 left-3 flex items-center gap-1 text-white/90 text-[10px] bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
                   <Clock className="h-3 w-3" />
                   {item.days}
                 </div>

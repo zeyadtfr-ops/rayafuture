@@ -100,18 +100,23 @@ export default function BottomSection() {
             {/* Mini gallery grid */}
             <div className="grid grid-cols-3 gap-2 mb-5">
               {[
-                "bg-[#0A382F]",
-                "bg-[#115B46]",
-                "bg-[#FBF4ED]",
-                "bg-[#115B46]",
-                "bg-[#0A382F]",
-                "bg-[#FBF4ED]",
-              ].map((c, i) => (
+                "/images/gallery-1.jpg",
+                "/images/gallery-2.jpg",
+                "/images/gallery-3.jpg",
+                "/images/gallery-4.jpg",
+                "/images/gallery-5.jpg",
+                "/images/gallery-6.jpg",
+              ].map((src, i) => (
                 <div
                   key={i}
-                  className={`aspect-square ${c} rounded-lg flex items-center justify-center border border-white/10`}
+                  className="aspect-square rounded-lg overflow-hidden border border-white/20 group/gal"
                 >
-                  <Images className="h-4 w-4 opacity-40" />
+                  <img
+                    src={src}
+                    alt={`فعالية ${i + 1}`}
+                    className="w-full h-full object-cover group-hover/gal:scale-110 transition-transform duration-300"
+                    loading="lazy"
+                  />
                 </div>
               ))}
             </div>
