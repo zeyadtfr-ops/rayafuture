@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X, Search, Facebook, Instagram, Linkedin, Youtube, Send } from "lucide-react";
+import { Menu, X, Search, Facebook, Linkedin, Youtube, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             <span className="opacity-70">تابعنا:</span>
-            {[Facebook, Instagram, Linkedin, Youtube].map((Icon, i) => (
+            {[Facebook, Linkedin, Youtube].map((Icon, i) => (
               <a
                 key={i}
                 href="#"
