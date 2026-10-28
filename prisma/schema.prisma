@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for Raya Future Magazine
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +10,69 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Editorial Article Model ───────────────────────────────────────────────
+// Stores magazine articles with full editorial metadata, source tracking,
+// and review/publish lifecycle. Used by the /admin dashboard and consumed
+// by the public magazine's NewsSection component.
+
+model Article {
+  // ── Identity & storage ────────────────────────────────────────────────
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // ── Editorial content (Arabic) ────────────────────────────────────────
+  title        String
+  excerpt      String?
+  body         String?
+  coverImage   String?
+  category     String   @default("أخبار المؤسسة")
+  tags         String?  // comma-separated
+
+  // ── Editorial lifecycle ───────────────────────────────────────────────
+  // draft → pending_review → approved → published
+  // rejected records are kept for audit but never displayed publicly.
+  status       ArticleStatus @default(DRAFT)
+
+  // ── Source provenance (for imported content) ──────────────────────────
+  // Tracks where the article came from to support idempotent imports.
+  sourcePlatform  String? // "facebook" | "website" | "manual" | "import"
+  sourceId        String? // stable ID from source (e.g. FB post ID)
+  sourceUrl       String?
+  originalText   String?  // untouched source text (preserved for audit)
+  originalPubAt  DateTime? // original publication date at source
+  importedAt     DateTime?
+
+  // ── Editorial tracking ────────────────────────────────────────────────
+  authorId      String?
+  reviewerId    String?
+  reviewedAt    DateTime?
+  publishedAt   DateTime?
+
+  // ── Duplicate detection (optional fingerprint of source content) ──────
+  contentHash   String?
+
+  @@index([status, publishedAt])
+  @@index([sourcePlatform, sourceId])
+  @@index([category])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+// Keep the original User model for future auth integration.
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  role      String   @default("editor")
+  passwordHash String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -1,0 +1,841 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useState } from "react";
+     4→import {
+     5→  Plus,
+     6→  Search,
+     7→  Pencil,
+     8→  Trash2,
+     9→  CheckCircle2,
+    10→  XCircle,
+    11→  Send,
+    12→  Eye,
+    13→  LogOut,
+    14→  Upload,
+    15→  FileText,
+    16→  RefreshCw,
+    17→} from "lucide-react";
+    18→import { Button } from "@/components/ui/button";
+    19→import { Input } from "@/components/ui/input";
+    20→import { toast } from "sonner";
+    21→
+    22→type Status = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "PUBLISHED";
+    23→
+    24→type Article = {
+    25→  id: string;
+    26→  slug: string;
+    27→  title: string;
+    28→  excerpt: string | null;
+    29→  body: string | null;
+    30→  coverImage: string | null;
+    31→  category: string;
+    32→  tags: string | null;
+    33→  status: Status;
+    34→  sourcePlatform: string | null;
+    35→  sourceId: string | null;
+    36→  sourceUrl: string | null;
+    37→  originalPubAt: string | null;
+    38→  publishedAt: string | null;
+    39→  createdAt: string;
+    40→};
+    41→
+    42→const STATUS_LABELS: Record<Status, string> = {
+    43→  DRAFT: "مسودة",
+    44→  PENDING_REVIEW: "بانتظار المراجعة",
+    45→  APPROVED: "معتمدة",
+    46→  REJECTED: "مرفوضة",
+    47→  PUBLISHED: "منشورة",
+    48→};
+    49→
+    50→const STATUS_COLORS: Record<Status, string> = {
+    51→  DRAFT: "bg-slate-200 text-slate-700",
+    52→  PENDING_REVIEW: "bg-amber-100 text-amber-800",
+    53→  APPROVED: "bg-blue-100 text-blue-800",
+    54→  REJECTED: "bg-red-100 text-red-800",
+    55→  PUBLISHED: "bg-green-100 text-green-800",
+    56→};
+    57→
+    58→const CATEGORIES = [
+    59→  "أخبار المؤسسة",
+    60→  "الأنشطة الطلابية",
+    61→  "الفعاليات والمؤتمرات",
+    62→  "إنجازات الطلاب",
+    63→  "المسابقات والجوائز",
+    64→  "فرص تعليمية",
+    65→  "التدريب وورش العمل",
+    66→  "مبادرات طلابية",
+    67→  "إعلانات رسمية",
+    68→  "مقالات تحريرية",
+    69→];
+    70→
+    71→const ADMIN_PASSWORD_KEY = "raya_admin_password";
+    72→
+    73→function getPassword(): string {
+    74→  if (typeof window === "undefined") return "";
+    75→  return sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "";
+    76→}
+    77→
+    78→function setPassword(pw: string) {
+    79→  if (typeof window === "undefined") return;
+    80→  sessionStorage.setItem(ADMIN_PASSWORD_KEY, pw);
+    81→}
+    82→
+    83→function clearPassword() {
+    84→  if (typeof window === "undefined") return;
+    85→  sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
+    86→}
+    87→
+    88→async function api(path: string, opts: RequestInit = {}) {
+    89→  const pw = getPassword();
+    90→  const headers: Record<string, string> = {
+    91→    "content-type": "application/json",
+    92→    ...(opts.headers as Record<string, string>),
+    93→  };
+    94→  if (pw) headers["x-admin-password"] = pw;
+    95→  const res = await fetch(path, { ...opts, headers });
+    96→  if (!res.ok) {
+    97→    const err = await res.json().catch(() => ({}));
+    98→    throw new Error(err.error || `HTTP ${res.status}`);
+    99→  }
+   100→  return res.json();
+   101→}
+   102→
+   103→// ─── Login Screen ──────────────────────────────────────────────────────
+   104→
+   105→function LoginScreen({ onLogin }: { onLogin: () => void }) {
+   106→  const [pw, setPw] = useState("");
+   107→  const [loading, setLoading] = useState(false);
+   108→
+   109→  const submit = async (e: React.FormEvent) => {
+   110→    e.preventDefault();
+   111→    setLoading(true);
+   112→    try {
+   113→      const res = await fetch("/api/auth/login", {
+   114→        method: "POST",
+   115→        headers: { "content-type": "application/json" },
+   116→        body: JSON.stringify({ password: pw }),
+   117→      });
+   118→      if (!res.ok) {
+   119→        const err = await res.json().catch(() => ({}));
+   120→        throw new Error(err.error || "Invalid password");
+   121→      }
+   122→      setPassword(pw);
+   123→      onLogin();
+   124→      toast.success("تم تسجيل الدخول");
+   125→    } catch (e: any) {
+   126→      toast.error(e.message || "فشل الدخول");
+   127→    } finally {
+   128→      setLoading(false);
+   129→    }
+   130→  };
+   131→
+   132→  return (
+   133→    <div className="min-h-screen flex items-center justify-center bg-[#0A382F] px-4">
+   134→      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+   135→        <div className="text-center mb-6">
+   136→          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-[#E69744] to-[#C77B2E] mb-3">
+   137→            <FileText className="h-7 w-7 text-white" />
+   138→          </div>
+   139→          <h1 className="heading-display text-2xl text-[#0A382F]">
+   140→            لوحة تحكم راية المستقبل
+   141→          </h1>
+   142→          <p className="text-sm text-[#5A6B66] mt-1">
+   143→            أدخل كلمة مرور المحرر للمتابعة
+   144→          </p>
+   145→        </div>
+   146→        <form onSubmit={submit} className="space-y-4">
+   147→          <Input
+   148→            type="password"
+   149→            value={pw}
+   150→            onChange={(e) => setPw(e.target.value)}
+   151→            placeholder="كلمة المرور"
+   152→            required
+   153→            className="h-12 rounded-md"
+   154→            autoFocus
+   155→          />
+   156→          <Button
+   157→            type="submit"
+   158→            disabled={loading}
+   159→            className="w-full h-12 bg-[#0A382F] hover:bg-[#115B46] text-white font-bold rounded-md"
+   160→          >
+   161→            {loading ? "جارٍ التحقق..." : "دخول"}
+   162→          </Button>
+   163→        </form>
+   164→        <p className="text-xs text-center mt-4 text-[#5A6B66]">
+   165→          كلمة المرور الافتراضية: <code className="bg-slate-100 px-1.5 py-0.5 rounded">raya-admin-2026</code>
+   166→          <br />
+   167→          (يمكن تغييرها عبر متغير البيئة <code>ADMIN_PASSWORD</code>)
+   168→        </p>
+   169→      </div>
+   170→    </div>
+   171→  );
+   172→}
+   173→
+   174→// ─── Editor Modal ──────────────────────────────────────────────────────
+   175→
+   176→function ArticleEditor({
+   177→  article,
+   178→  onClose,
+   179→  onSaved,
+   180→}: {
+   181→  article: Article | null;
+   182→  onClose: () => void;
+   183→  onSaved: () => void;
+   184→}) {
+   185→  const [title, setTitle] = useState(article?.title || "");
+   186→  const [excerpt, setExcerpt] = useState(article?.excerpt || "");
+   187→  const [body, setBody] = useState(article?.body || "");
+   188→  const [coverImage, setCoverImage] = useState(article?.coverImage || "");
+   189→  const [category, setCategory] = useState(article?.category || CATEGORIES[0]);
+   190→  const [tags, setTags] = useState(article?.tags || "");
+   191→  const [sourceUrl, setSourceUrl] = useState(article?.sourceUrl || "");
+   192→  const [saving, setSaving] = useState(false);
+   193→
+   194→  const save = async (publishNow = false) => {
+   195→    if (title.trim().length < 3) {
+   196→      toast.error("العنوان قصير جداً (٣ أحرف على الأقل)");
+   197→      return;
+   198→    }
+   199→    setSaving(true);
+   200→    try {
+   201→      const payload: any = {
+   202→        title: title.trim(),
+   203→        excerpt: excerpt || null,
+   204→        body: body || null,
+   205→        coverImage: coverImage || null,
+   206→        category,
+   207→        tags: tags || null,
+   208→        sourceUrl: sourceUrl || null,
+   209→        sourcePlatform: article?.sourcePlatform || "manual",
+   210→      };
+   211→      if (publishNow) payload.status = "PUBLISHED";
+   212→
+   213→      if (article) {
+   214→        await api(`/api/articles/${article.id}`, {
+   215→          method: "PUT",
+   216→          body: JSON.stringify(payload),
+   217→        });
+   218→      } else {
+   219→        await api("/api/articles", {
+   220→          method: "POST",
+   221→          body: JSON.stringify(payload),
+   222→        });
+   223→      }
+   224→      toast.success(publishNow ? "تم نشر المقال" : "تم حفظ المقال");
+   225→      onSaved();
+   226→      onClose();
+   227→    } catch (e: any) {
+   228→      toast.error(e.message || "فشل الحفظ");
+   229→    } finally {
+   230→      setSaving(false);
+   231→    }
+   232→  };
+   233→
+   234→  return (
+   235→    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+   236→      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+   237→        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-2xl">
+   238→          <h2 className="heading-display text-xl text-[#0A382F]">
+   239→            {article ? "تعديل مقال" : "مقال جديد"}
+   240→          </h2>
+   241→          <Button variant="ghost" size="sm" onClick={onClose}>
+   242→            <XCircle className="h-5 w-5" />
+   243→          </Button>
+   244→        </div>
+   245→
+   246→        <div className="p-6 space-y-4">
+   247→          <div>
+   248→            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   249→              العنوان *
+   250→            </label>
+   251→            <Input
+   252→              value={title}
+   253→              onChange={(e) => setTitle(e.target.value)}
+   254→              placeholder="عنوان المقال"
+   255→              className="h-11 rounded-md"
+   256→            />
+   257→          </div>
+   258→
+   259→          <div>
+   260→            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   261→              المقتطف (excerpt)
+   262→            </label>
+   263→            <textarea
+   264→              value={excerpt}
+   265→              onChange={(e) => setExcerpt(e.target.value)}
+   266→              placeholder="ملخص قصير يظهر في بطاقة المقال"
+   267→              rows={2}
+   268→              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
+   269→            />
+   270→          </div>
+   271→
+   272→          <div>
+   273→            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   274→              النص الكامل
+   275→            </label>
+   276→            <textarea
+   277→              value={body}
+   278→              onChange={(e) => setBody(e.target.value)}
+   279→              placeholder="نص المقال الكامل..."
+   280→              rows={8}
+   281→              className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-y leading-relaxed"
+   282→            />
+   283→          </div>
+   284→
+   285→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   286→            <div>
+   287→              <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   288→                القسم
+   289→              </label>
+   290→              <select
+   291→                value={category}
+   292→                onChange={(e) => setCategory(e.target.value)}
+   293→                className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm"
+   294→              >
+   295→                {CATEGORIES.map((c) => (
+   296→                  <option key={c} value={c}>
+   297→                    {c}
+   298→                  </option>
+   299→                ))}
+   300→              </select>
+   301→            </div>
+   302→            <div>
+   303→              <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   304→                الوسوم (مفصولة بفواصل)
+   305→              </label>
+   306→              <Input
+   307→                value={tags}
+   308→                onChange={(e) => setTags(e.target.value)}
+   309→                placeholder="تعليم, طلاب, فعاليات"
+   310→                className="h-11 rounded-md"
+   311→              />
+   312→            </div>
+   313→          </div>
+   314→
+   315→          <div>
+   316→            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   317→              رابط صورة الغلاف (URL)
+   318→            </label>
+   319→            <Input
+   320→              value={coverImage}
+   321→              onChange={(e) => setCoverImage(e.target.value)}
+   322→              placeholder="/images/news-1.jpg"
+   323→              className="h-11 rounded-md"
+   324→              dir="ltr"
+   325→            />
+   326→            {coverImage && (
+   327→              <div className="mt-2 h-32 rounded-md overflow-hidden bg-slate-100">
+   328→                <img
+   329→                  src={coverImage}
+   330→                  alt="preview"
+   331→                  className="w-full h-full object-cover"
+   332→                  onError={(e) => (e.currentTarget.style.display = "none")}
+   333→                />
+   334→              </div>
+   335→            )}
+   336→          </div>
+   337→
+   338→          <div>
+   339→            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+   340→              رابط المصدر (اختياري)
+   341→            </label>
+   342→            <Input
+   343→              value={sourceUrl}
+   344→              onChange={(e) => setSourceUrl(e.target.value)}
+   345→              placeholder="https://www.facebook.com/..."
+   346→              className="h-11 rounded-md"
+   347→              dir="ltr"
+   348→            />
+   349→          </div>
+   350→        </div>
+   351→
+   352→        <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex flex-wrap gap-2 justify-end rounded-b-2xl">
+   353→          <Button variant="ghost" onClick={onClose}>
+   354→            إلغاء
+   355→          </Button>
+   356→          <Button
+   357→            variant="outline"
+   358→            onClick={() => save(false)}
+   359→            disabled={saving}
+   360→            className="border-[#0A382F] text-[#0A382F]"
+   361→          >
+   362→            {saving ? "جارٍ الحفظ..." : "حفظ كمسودة"}
+   363→          </Button>
+   364→          <Button
+   365→            onClick={() => save(true)}
+   366→            disabled={saving}
+   367→            className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold"
+   368→          >
+   369→            <Send className="h-4 w-4 ml-1" />
+   370→            نشر فوراً
+   371→          </Button>
+   372→        </div>
+   373→      </div>
+   374→    </div>
+   375→  );
+   376→}
+   377→
+   378→// ─── Import Modal ──────────────────────────────────────────────────────
+   379→
+   380→function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+   381→  const [text, setText] = useState("");
+   382→  const [loading, setLoading] = useState(false);
+   383→
+   384→  const sample = `[
+   385→  {
+   386→    "title": "اعتماد المعهد من الهيئة القومية لضمان جودة التعليم",
+   387→    "excerpt": "حصل المعهد على اعتماد الهيئة القومية لضمان جودة التعليم والاعتماد.",
+   388→    "body": "نص المقال الكامل...",
+   389→    "category": "إعلانات رسمية",
+   390→    "coverImage": "/images/news-accreditation.jpg",
+   391→    "sourcePlatform": "facebook",
+   392→    "sourceId": "fb_post_123",
+   393→    "sourceUrl": "https://www.facebook.com/RayaEdu2018/posts/123",
+   394→    "originalPubAt": "2024-07-12T10:00:00Z"
+   395→  }
+   396→]`;
+   397→
+   398→  const doImport = async () => {
+   399→    let parsed;
+   400→    try {
+   401→      parsed = JSON.parse(text);
+   402→    } catch (e: any) {
+   403→      toast.error("JSON غير صالح: " + e.message);
+   404→      return;
+   405→    }
+   406→    setLoading(true);
+   407→    try {
+   408→      const res = await api("/api/articles/import", {
+   409→        method: "POST",
+   410→        body: JSON.stringify(parsed),
+   411→      });
+   412→      toast.success(
+   413→        `تم الاستيراد: ${res.created} جديد، ${res.skipped} مكرر، ${res.failed} فشل`
+   414→      );
+   415→      if (res.errors?.length) {
+   416→        console.warn("Import errors:", res.errors);
+   417→      }
+   418→      onDone();
+   419→      onClose();
+   420→    } catch (e: any) {
+   421→      toast.error(e.message);
+   422→    } finally {
+   423→      setLoading(false);
+   424→    }
+   425→  };
+   426→
+   427→  return (
+   428→    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+   429→      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+   430→        <div className="border-b px-6 py-4 flex items-center justify-between">
+   431→          <h2 className="heading-display text-xl text-[#0A382F]">
+   432→            استيراد مقالات من JSON
+   433→          </h2>
+   434→          <Button variant="ghost" size="sm" onClick={onClose}>
+   435→            <XCircle className="h-5 w-5" />
+   436→          </Button>
+   437→        </div>
+   438→        <div className="p-6 space-y-4">
+   439→          <p className="text-sm text-[#5A6B66]">
+   440→            الصق هنا JSON array من المقالات. المقالات المستوردة تبقى كـ
+   441→            <strong> مسودات </strong> إلى أن يعتمدها محرر. الاستيراد idempotent —
+   442→            إعادة استيراد نفس المقالات (بنفس sourceId) لن يكررها.
+   443→          </p>
+   444→          <textarea
+   445→            value={text}
+   446→            onChange={(e) => setText(e.target.value)}
+   447→            placeholder={sample}
+   448→            rows={12}
+   449→            className="w-full px-3 py-2 rounded-md border border-input bg-background text-xs font-mono resize-y"
+   450→            dir="ltr"
+   451→          />
+   452→          <details className="text-xs">
+   453→            <summary className="cursor-pointer text-[#E69744] font-bold">
+   454→              عرض مثال للصيغة
+   455→            </summary>
+   456→            <pre
+   457→              className="mt-2 p-3 bg-slate-50 rounded-md overflow-x-auto text-[10px]"
+   458→              dir="ltr"
+   459→            >
+   460→              {sample}
+   461→            </pre>
+   462→          </details>
+   463→        </div>
+   464→        <div className="border-t px-6 py-4 flex justify-end gap-2">
+   465→          <Button variant="ghost" onClick={onClose}>
+   466→            إلغاء
+   467→          </Button>
+   468→          <Button
+   469→            onClick={doImport}
+   470→            disabled={loading || !text.trim()}
+   471→            className="bg-[#0A382F] hover:bg-[#115B46] text-white font-bold"
+   472→          >
+   473→            <Upload className="h-4 w-4 ml-1" />
+   474→            {loading ? "جارٍ الاستيراد..." : "استيراد"}
+   475→          </Button>
+   476→        </div>
+   477→      </div>
+   478→    </div>
+   479→  );
+   480→}
+   481→
+   482→// ─── Main Dashboard ────────────────────────────────────────────────────
+   483→
+   484→export default function AdminPage() {
+   485→  const [authed, setAuthed] = useState(false);
+   486→  const [checking, setChecking] = useState(true);
+   487→  const [articles, setArticles] = useState<Article[]>([]);
+   488→  const [loading, setLoading] = useState(true);
+   489→  const [statusFilter, setStatusFilter] = useState<string>("");
+   490→  const [q, setQ] = useState("");
+   491→  const [editing, setEditing] = useState<Article | null>(null);
+   492→  const [showEditor, setShowEditor] = useState(false);
+   493→  const [showImport, setShowImport] = useState(false);
+   494→
+   495→  useEffect(() => {
+   496→    if (getPassword()) {
+   497→      setAuthed(true);
+   498→    }
+   499→    setChecking(false);
+   500→  }, []);
+   501→
+   502→  const load = useCallback(async () => {
+   503→    setLoading(true);
+   504→    try {
+   505→      const params = new URLSearchParams({ limit: "100" });
+   506→      if (statusFilter) params.set("status", statusFilter);
+   507→      if (q) params.set("q", q);
+   508→      const res = await api(`/api/articles?${params}`);
+   509→      setArticles(res.items || []);
+   510→    } catch (e: any) {
+   511→      if (e.message === "Unauthorized") {
+   512→        setAuthed(false);
+   513→        clearPassword();
+   514→      } else {
+   515→        toast.error(e.message);
+   516→      }
+   517→    } finally {
+   518→      setLoading(false);
+   519→    }
+   520→  }, [statusFilter, q]);
+   521→
+   522→  useEffect(() => {
+   523→    if (authed) load();
+   524→  }, [authed, load]);
+   525→
+   526→  if (checking) {
+   527→    return (
+   528→      <div className="min-h-screen flex items-center justify-center bg-[#0A382F]">
+   529→        <div className="text-white">جارٍ التحميل...</div>
+   530→      </div>
+   531→    );
+   532→  }
+   533→
+   534→  if (!authed) {
+   535→    return <LoginScreen onLogin={() => setAuthed(true)} />;
+   536→  }
+   537→
+   538→  const changeStatus = async (a: Article, status: Status) => {
+   539→    try {
+   540→      await api(`/api/articles/${a.id}`, {
+   541→        method: "PUT",
+   542→        body: JSON.stringify({ status }),
+   543→      });
+   544→      toast.success(`تم تحديث الحالة إلى: ${STATUS_LABELS[status]}`);
+   545→      load();
+   546→    } catch (e: any) {
+   547→      toast.error(e.message);
+   548→    }
+   549→  };
+   550→
+   551→  const del = async (a: Article) => {
+   552→    if (!confirm(`حذف المقال: "${a.title}"؟`)) return;
+   553→    try {
+   554→      await api(`/api/articles/${a.id}`, { method: "DELETE" });
+   555→      toast.success("تم الحذف");
+   556→      load();
+   557→    } catch (e: any) {
+   558→      toast.error(e.message);
+   559→    }
+   560→  };
+   561→
+   562→  const logout = () => {
+   563→    clearPassword();
+   564→    setAuthed(false);
+   565→  };
+   566→
+   567→  return (
+   568→    <div className="min-h-screen bg-[#FBF4ED]">
+   569→      {/* Header */}
+   570→      <header className="bg-[#0A382F] text-white shadow-md sticky top-0 z-40">
+   571→        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+   572→          <div className="flex items-center gap-3">
+   573→            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#E69744] to-[#C77B2E] flex items-center justify-center">
+   574→              <FileText className="h-5 w-5 text-white" />
+   575→            </div>
+   576→            <div>
+   577→              <h1 className="heading-display text-xl">لوحة تحكم راية المستقبل</h1>
+   578→              <p className="text-xs text-white/60">إدارة محتوى المجلة</p>
+   579→            </div>
+   580→          </div>
+   581→          <div className="flex items-center gap-2">
+   582→            <Button
+   583→              asChild
+   584→              variant="ghost"
+   585→              className="text-white hover:bg-white/10"
+   586→            >
+   587→              <a href="/">
+   588→                <Eye className="h-4 w-4 ml-1" />
+   589→                عرض الموقع
+   590→              </a>
+   591→            </Button>
+   592→            <Button
+   593→              variant="ghost"
+   594→              className="text-white hover:bg-white/10"
+   595→              onClick={logout}
+   596→            >
+   597→              <LogOut className="h-4 w-4 ml-1" />
+   598→              خروج
+   599→            </Button>
+   600→          </div>
+   601→        </div>
+   602→      </header>
+   603→
+   604→      <main className="container mx-auto px-4 py-8">
+   605→        {/* Toolbar */}
+   606→        <div className="flex flex-col md:flex-row gap-3 mb-6 items-stretch md:items-center justify-between">
+   607→          <div className="flex flex-wrap gap-2 flex-1">
+   608→            <Input
+   609→              placeholder="بحث..."
+   610→              value={q}
+   611→              onChange={(e) => setQ(e.target.value)}
+   612→              className="max-w-xs h-10 rounded-md"
+   613→            />
+   614→            <select
+   615→              value={statusFilter}
+   616→              onChange={(e) => setStatusFilter(e.target.value)}
+   617→              className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+   618→            >
+   619→              <option value="">كل الحالات</option>
+   620→              {(Object.keys(STATUS_LABELS) as Status[]).map((s) => (
+   621→                <option key={s} value={s}>
+   622→                  {STATUS_LABELS[s]}
+   623→                </option>
+   624→              ))}
+   625→            </select>
+   626→            <Button
+   627→              variant="outline"
+   628→              onClick={load}
+   629→              disabled={loading}
+   630→              className="h-10 border-[#0A382F] text-[#0A382F]"
+   631→            >
+   632→              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+   633→            </Button>
+   634→          </div>
+   635→          <div className="flex gap-2">
+   636→            <Button
+   637→              variant="outline"
+   638→              onClick={() => setShowImport(true)}
+   639→              className="border-[#0A382F] text-[#0A382F] hover:bg-[#0A382F] hover:text-white h-10"
+   640→            >
+   641→              <Upload className="h-4 w-4 ml-1" />
+   642→              استيراد JSON
+   643→            </Button>
+   644→            <Button
+   645→              onClick={() => {
+   646→                setEditing(null);
+   647→                setShowEditor(true);
+   648→              }}
+   649→              className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold h-10"
+   650→            >
+   651→              <Plus className="h-4 w-4 ml-1" />
+   652→              مقال جديد
+   653→            </Button>
+   654→          </div>
+   655→        </div>
+   656→
+   657→        {/* Articles table */}
+   658→        <div className="bg-white rounded-xl shadow-sm border border-[#D9E2DC] overflow-hidden">
+   659→          {loading ? (
+   660→            <div className="p-12 text-center text-[#5A6B66]">جارٍ التحميل...</div>
+   661→          ) : articles.length === 0 ? (
+   662→            <div className="p-12 text-center">
+   663→              <FileText className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+   664→              <p className="text-[#5A6B66] mb-4">لا توجد مقالات بعد</p>
+   665→              <Button
+   666→                onClick={() => {
+   667→                  setEditing(null);
+   668→                  setShowEditor(true);
+   669→                }}
+   670→                className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold"
+   671→              >
+   672→                <Plus className="h-4 w-4 ml-1" />
+   673→                أنشئ أول مقال
+   674→              </Button>
+   675→            </div>
+   676→          ) : (
+   677→            <div className="overflow-x-auto">
+   678→              <table className="w-full text-sm">
+   679→                <thead className="bg-[#E9F2EB] text-[#0A382F]">
+   680→                  <tr>
+   681→                    <th className="text-right p-3 font-bold">العنوان</th>
+   682→                    <th className="text-right p-3 font-bold whitespace-nowrap">القسم</th>
+   683→                    <th className="text-right p-3 font-bold">الحالة</th>
+   684→                    <th className="text-right p-3 font-bold whitespace-nowrap">المصدر</th>
+   685→                    <th className="text-right p-3 font-bold whitespace-nowrap">التاريخ</th>
+   686→                    <th className="text-center p-3 font-bold">إجراءات</th>
+   687→                  </tr>
+   688→                </thead>
+   689→                <tbody>
+   690→                  {articles.map((a) => (
+   691→                    <tr
+   692→                      key={a.id}
+   693→                      className="border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50"
+   694→                    >
+   695→                      <td className="p-3">
+   696→                        <div className="font-bold text-[#0A382F] line-clamp-1">
+   697→                          {a.title}
+   698→                        </div>
+   699→                        {a.excerpt && (
+   700→                          <div className="text-xs text-[#5A6B66] line-clamp-1 mt-0.5">
+   701→                            {a.excerpt}
+   702→                          </div>
+   703→                        )}
+   704→                      </td>
+   705→                      <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+   706→                        {a.category}
+   707→                      </td>
+   708→                      <td className="p-3">
+   709→                        <span
+   710→                          className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold ${
+   711→                            STATUS_COLORS[a.status]
+   712→                          }`}
+   713→                        >
+   714→                          {STATUS_LABELS[a.status]}
+   715→                        </span>
+   716→                      </td>
+   717→                      <td className="p-3 text-xs text-[#5A6B66]">
+   718→                        {a.sourcePlatform === "facebook" && "فيسبوك"}
+   719→                        {a.sourcePlatform === "website" && "الموقع"}
+   720→                        {a.sourcePlatform === "manual" && "يدوي"}
+   721→                        {a.sourcePlatform === "import" && "استيراد"}
+   722→                        {!a.sourcePlatform && "—"}
+   723→                      </td>
+   724→                      <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+   725→                        {a.publishedAt
+   726→                          ? new Date(a.publishedAt).toLocaleDateString("ar-EG")
+   727→                          : a.originalPubAt
+   728→                          ? new Date(a.originalPubAt).toLocaleDateString("ar-EG")
+   729→                          : "—"}
+   730→                      </td>
+   731→                      <td className="p-3">
+   732→                        <div className="flex items-center justify-center gap-1">
+   733→                          <button
+   734→                            onClick={() => {
+   735→                              setEditing(a);
+   736→                              setShowEditor(true);
+   737→                            }}
+   738→                            className="p-1.5 rounded hover:bg-[#0A382F]/10 text-[#0A382F]"
+   739→                            title="تعديل"
+   740→                          >
+   741→                            <Pencil className="h-4 w-4" />
+   742→                          </button>
+   743→                          {a.status === "DRAFT" && (
+   744→                            <button
+   745→                              onClick={() => changeStatus(a, "PENDING_REVIEW")}
+   746→                              className="p-1.5 rounded hover:bg-amber-100 text-amber-700"
+   747→                              title="إرسال للمراجعة"
+   748→                            >
+   749→                              <Send className="h-4 w-4" />
+   750→                            </button>
+   751→                          )}
+   752→                          {(a.status === "PENDING_REVIEW" || a.status === "DRAFT") && (
+   753→                            <>
+   754→                              <button
+   755→                                onClick={() => changeStatus(a, "APPROVED")}
+   756→                                className="p-1.5 rounded hover:bg-blue-100 text-blue-700"
+   757→                                title="اعتماد"
+   758→                              >
+   759→                                <CheckCircle2 className="h-4 w-4" />
+   760→                              </button>
+   761→                              <button
+   762→                                onClick={() => changeStatus(a, "REJECTED")}
+   763→                                className="p-1.5 rounded hover:bg-red-100 text-red-700"
+   764→                                title="رفض"
+   765→                              >
+   766→                                <XCircle className="h-4 w-4" />
+   767→                              </button>
+   768→                            </>
+   769→                          )}
+   770→                          {a.status !== "PUBLISHED" && a.status !== "REJECTED" && (
+   771→                            <button
+   772→                              onClick={() => changeStatus(a, "PUBLISHED")}
+   773→                              className="p-1.5 rounded hover:bg-green-100 text-green-700"
+   774→                              title="نشر"
+   775→                            >
+   776→                              <Send className="h-4 w-4" />
+   777→                            </button>
+   778→                          )}
+   779→                          <button
+   780→                            onClick={() => del(a)}
+   781→                            className="p-1.5 rounded hover:bg-red-100 text-red-700"
+   782→                            title="حذف"
+   783→                          >
+   784→                            <Trash2 className="h-4 w-4" />
+   785→                          </button>
+   786→                        </div>
+   787→                      </td>
+   788→                    </tr>
+   789→                  ))}
+   790→                </tbody>
+   791→              </table>
+   792→            </div>
+   793→          )}
+   794→        </div>
+   795→
+   796→        {/* Facebook API extension note */}
+   797→        <div className="mt-6 bg-[#0A382F] text-white rounded-xl p-6">
+   798→          <h3 className="heading-display text-lg mb-2 flex items-center gap-2">
+   799→            <Upload className="h-5 w-5 text-[#E69744]" />
+   800→            تكامل Facebook Graph API (يتطلب إعداد)
+   801→          </h3>
+   802→          <p className="text-sm text-white/70 leading-relaxed mb-3">
+   803→            الاستيراد التلقائي من صفحة Facebook يتطلب إنشاء Meta Developer App
+   804→            والحصول على Page Access Token. حالياً، استخدم زر
+   805→            <strong className="text-[#E69744]"> "استيراد JSON" </strong>
+   806→            لرفع بوستات تم تصديرها يدوياً من Facebook (Data Export) أو من Google
+   807→            Drive الذي تجهّزه.
+   808→          </p>
+   809→          <details className="text-xs">
+   810→            <summary className="cursor-pointer text-[#E69744] font-bold mb-2">
+   811→              خطوات تفعيل Facebook API (اختياري - للمستقبل)
+   812→            </summary>
+   813→            <ol className="list-decimal list-inside space-y-1 text-white/70 mt-2">
+   814→              <li>إنشاء Meta Developer Account على developers.facebook.com</li>
+   815→              <li>إنشاء Facebook App جديد</li>
+   816→              <li>طلب صلاحية pages_read_engagement (تتطلب App Review)</li>
+   817→              <li>الحصول على Page Access Token من أدمن الصفحة</li>
+   818→              <li>إضافة المتغيرات في .env: FB_APP_ID, FB_APP_SECRET, FB_PAGE_TOKEN</li>
+   819→              <li>توسيع endpoint &quot;/api/articles/sync-facebook&quot; (نقطة extension جاهزة)</li>
+   820→            </ol>
+   821→          </details>
+   822→        </div>
+   823→      </main>
+   824→
+   825→      {showEditor && (
+   826→        <ArticleEditor
+   827→          article={editing}
+   828→          onClose={() => setShowEditor(false)}
+   829→          onSaved={load}
+   830→        />
+   831→      )}
+   832→      {showImport && (
+   833→        <ImportModal
+   834→          onClose={() => setShowImport(false)}
+   835→          onDone={load}
+   836→        />
+   837→      )}
+   838→    </div>
+   839→  );
+   840→}
+   841→

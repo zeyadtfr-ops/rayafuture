@@ -1,19 +1,22 @@
 "use client";
 
-import { ArrowLeft, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Clock, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type NewsItem = {
+  id?: string;
   category: string;
   title: string;
   excerpt: string;
   date: string;
   days: string;
   image: string;
-  icon: React.ReactNode;
+  sourceUrl?: string | null;
 };
 
-const NEWS: NewsItem[] = [
+// Fallback content shown when DB is empty (preserves the previous design).
+const FALLBACK_NEWS: NewsItem[] = [
   {
     category: "اقتصاد وتجارة",
     title: "التحديات الاقتصادية للتصدير والتوسع في الأسواق الجديدة",
@@ -22,7 +25,6 @@ const NEWS: NewsItem[] = [
     date: "أكتوبر ٢٠٢٦",
     days: "مقال حصري",
     image: "/images/news-economics.jpg",
-    icon: <Spark />,
   },
   {
     category: "إدارة الأعمال",
@@ -32,7 +34,6 @@ const NEWS: NewsItem[] = [
     date: "أكتوبر ٢٠٢٦",
     days: "مقال حصري",
     image: "/images/news-management.jpg",
-    icon: <Quote />,
   },
   {
     category: "حالة دراسية",
@@ -42,7 +43,6 @@ const NEWS: NewsItem[] = [
     date: "أكتوبر ٢٠٢٦",
     days: "حالة دراسية",
     image: "/images/news-strategy.jpg",
-    icon: <Users />,
   },
   {
     category: "اعتماد أكاديمي",
@@ -52,52 +52,79 @@ const NEWS: NewsItem[] = [
     date: "منذ ٢٠١٨",
     days: "إنجاز مؤسسي",
     image: "/images/news-accreditation.jpg",
-    icon: <Trophy />,
   },
 ];
 
+const AR_DATE = new Intl.DateTimeFormat("ar-EG", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
 function Spark() {
   return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.6">
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 2 L13.8 9.5 L21 12 L13.8 14.5 L12 22 L10.2 14.5 L3 12 L10.2 9.5 Z" />
-    </svg>
-  );
-}
-function Quote() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M7 7 H4 a1 1 0 0 0 -1 1 v6 a1 1 0 0 0 1 1 h3 a1 1 0 0 0 1 -1 v-3 a3 3 0 0 0 -3 -3 Z M18 7 h-3 a1 1 0 0 0 -1 1 v6 a1 1 0 0 0 1 1 h3 a1 1 0 0 0 1 -1 v-3 a3 3 0 0 0 -3 -3 Z" />
-    </svg>
-  );
-}
-function Users() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20 c0-3.3 2.7-6 6-6 s6 2.7 6 6" />
-      <circle cx="17" cy="8" r="2.5" />
-      <path d="M15 20 c0-2.5 2-4.5 4.5-4.5" />
-    </svg>
-  );
-}
-function Trophy() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M6 4 h12 v5 a6 6 0 0 1 -12 0 Z" />
-      <path d="M6 5 H4 v2 a3 3 0 0 0 3 3 M18 5 h2 v2 a3 3 0 0 1 -3 3" />
-      <path d="M9 19 h6 M12 15 v4" />
     </svg>
   );
 }
 
 export default function NewsSection() {
+  const [items, setItems] = useState<NewsItem[]>(FALLBACK_NEWS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/articles?limit=8");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const mapped: NewsItem[] = (data.items || []).map((a: any) => ({
+          id: a.id,
+          category: a.category || "أخبار",
+          title: a.title,
+          excerpt: a.excerpt || "",
+          date: a.publishedAt
+            ? AR_DATE.format(new Date(a.publishedAt))
+            : a.originalPubAt
+            ? AR_DATE.format(new Date(a.originalPubAt))
+            : AR_DATE.format(new Date(a.createdAt)),
+          days: a.sourcePlatform === "facebook" ? "من فيسبوك" : "مقال",
+          image: a.coverImage || "/images/news-economics.jpg",
+          sourceUrl: a.sourceUrl,
+        }));
+        if (mapped.length > 0) {
+          // If fewer than 4 published articles exist, pad with fallback
+          // so the grid always looks complete (matches the original design).
+          if (mapped.length < 4) {
+            const needed = 4 - mapped.length;
+            const pad = FALLBACK_NEWS.slice(0, needed).map((f, i) => ({
+              ...f,
+              id: `fallback-${i}`,
+            }));
+            setItems([...mapped, ...pad]);
+          } else {
+            setItems(mapped);
+          }
+        }
+      } catch {
+        /* keep fallback */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section id="news" className="py-20 bg-[#FBF4ED] relative overflow-hidden">
-      {/* Decorative shape */}
       <div className="absolute top-0 left-0 w-72 h-72 bg-[#E9F2EB] rounded-full -translate-x-1/3 -translate-y-1/3 opacity-50" />
 
       <div className="container mx-auto px-4 relative">
-        {/* Heading */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <div>
             <div className="inline-flex items-center gap-2 text-[#E69744] text-sm font-bold tracking-wider mb-3">
@@ -124,14 +151,12 @@ export default function NewsSection() {
           </Button>
         </div>
 
-        {/* News grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {NEWS.map((item, i) => (
+          {items.map((item, i) => (
             <article
-              key={i}
+              key={item.id || i}
               className="group bg-white rounded-xl overflow-hidden shadow-sm border border-[#D9E2DC] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
             >
-              {/* Real image */}
               <div className="relative h-44 overflow-hidden bg-[#0A382F]">
                 <img
                   src={item.image}
@@ -139,29 +164,23 @@ export default function NewsSection() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                {/* Dark gradient overlay for badge readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A382F]/60 via-transparent to-transparent" />
-
-                {/* Icon badge (small, top-left, decorative) */}
                 <div className="absolute bottom-3 left-3 h-10 w-10 rounded-full bg-[#E69744] flex items-center justify-center text-white shadow-lg">
-                  {item.icon}
+                  <Spark />
                 </div>
-
-                {/* Category badge */}
                 <div className="absolute top-3 right-3 bg-white/95 text-[#0A382F] text-[11px] font-bold px-2.5 py-1 rounded-full">
                   {item.category}
                 </div>
-
-                {/* Date badge */}
                 <div className="absolute top-3 left-3 flex items-center gap-1 text-white/90 text-[10px] bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
                   <Clock className="h-3 w-3" />
                   {item.days}
                 </div>
               </div>
 
-              {/* Body */}
               <div className="p-5 flex flex-col flex-1">
-                <div className="text-[11px] text-[#E69744] font-bold mb-2">{item.date}</div>
+                <div className="text-[11px] text-[#E69744] font-bold mb-2">
+                  {item.date}
+                </div>
                 <h3 className="heading-display text-[#0A382F] text-lg leading-snug mb-2 group-hover:text-[#115B46] transition-colors">
                   {item.title}
                 </h3>
@@ -169,7 +188,9 @@ export default function NewsSection() {
                   {item.excerpt}
                 </p>
                 <a
-                  href="#"
+                  href={item.sourceUrl || "#"}
+                  target={item.sourceUrl ? "_blank" : undefined}
+                  rel={item.sourceUrl ? "noopener noreferrer" : undefined}
                   className="inline-flex items-center text-[#0A382F] font-bold text-sm group-hover:text-[#E69744] transition-colors"
                 >
                   اقرأ المزيد
@@ -179,6 +200,13 @@ export default function NewsSection() {
             </article>
           ))}
         </div>
+
+        {loading && (
+          <div className="text-center text-xs text-[#5A6B66]/60 mt-6 flex items-center justify-center gap-2">
+            <FileText className="h-3 w-3" />
+            جارٍ تحميل المقالات من قاعدة البيانات...
+          </div>
+        )}
       </div>
     </section>
   );
