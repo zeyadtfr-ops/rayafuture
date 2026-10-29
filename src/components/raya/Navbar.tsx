@@ -72,13 +72,14 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <button
+            <a
+              href="/admin"
               className="hidden md:flex h-9 px-3 items-center gap-1.5 rounded-md bg-gold/10 text-gold hover:bg-gold/20 transition-colors text-sm font-medium"
               aria-label="دخول"
             >
               <LogIn className="h-4 w-4" />
               دخول
-            </button>
+            </a>
             <button
               className="lg:hidden text-paper p-2"
               onClick={() => setOpen((s) => !s)}
@@ -127,10 +128,14 @@ export default function Navbar() {
                 {item.label}
               </a>
             ))}
-            <button className="mt-3 mx-3 mb-2 h-10 rounded-md bg-gold/15 text-gold text-sm font-medium flex items-center justify-center gap-1.5">
+            <a
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="mt-3 mx-3 mb-2 h-10 rounded-md bg-gold/15 text-gold text-sm font-medium flex items-center justify-center gap-1.5"
+            >
               <LogIn className="h-4 w-4" />
               دخول
-            </button>
+            </a>
           </nav>
         </div>
       )}
