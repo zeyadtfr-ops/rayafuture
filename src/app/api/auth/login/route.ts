@@ -1,11 +1,17 @@
 /**
- * POST /api/auth/login  — verify admin password and return a flag.
+ * POST /api/auth/login  — verify admin credentials.
  *
- * The browser stores the password in sessionStorage and sends it as the
- * `x-admin-password` header on every mutating request.
+ * Accepts two login modes:
+ *  1. Master password:  { password: "..." }
+ *  2. Member login:      { email: "...", password: "..." }
+ *
+ * Returns the session info so the frontend knows which headers to send
+ * on subsequent requests.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { db } from "@/lib/db";
 import { getAdminPassword } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
@@ -16,14 +22,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const password = body?.password;
+  // Mode 1: member login (email + password)
+  if (body.email) {
+    const email = String(body.email).trim().toLowerCase();
+    const password = body.password || "";
+    if (!password) {
+      return NextResponse.json({ error: "كلمة المرور مطلوبة" }, { status: 400 });
+    }
+
+    const user = await db.user.findUnique({ where: { email } });
+    if (!user || !user.passwordHash) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 });
+    }
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) {
+      return NextResponse.json({ error: "بيانات الدخول غير صحيحة" }, { status: 401 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mode: "member",
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    });
+  }
+
+  // Mode 2: master password
+  const password = body.password;
   if (!password) {
     return NextResponse.json({ error: "Password required" }, { status: 400 });
   }
-
   if (password !== getAdminPassword()) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true, role: "admin" });
+  return NextResponse.json({ ok: true, mode: "master", role: "admin" });
 }

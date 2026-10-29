@@ -19,6 +19,8 @@ import {
   BarChart3,
   Layers,
   Zap,
+  Users,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,29 +76,67 @@ const CATEGORIES = [
 ];
 
 const ADMIN_PASSWORD_KEY = "raya_admin_password";
+const ADMIN_EMAIL_KEY = "raya_admin_email";
+const ADMIN_TOKEN_KEY = "raya_admin_token";
+const ADMIN_USER_KEY = "raya_admin_user";
 
-function getPassword(): string {
-  if (typeof window === "undefined") return "";
-  return sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "";
+type SessionInfo = {
+  mode: "master" | "member";
+  user?: { id: string; email: string; name: string | null; role: string };
+};
+
+function getStoredSession(): SessionInfo | null {
+  if (typeof window === "undefined") return null;
+  const pw = sessionStorage.getItem(ADMIN_PASSWORD_KEY);
+  if (pw) return { mode: "master" };
+  const email = sessionStorage.getItem(ADMIN_EMAIL_KEY);
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  const userJson = sessionStorage.getItem(ADMIN_USER_KEY);
+  if (email && token && userJson) {
+    try {
+      const user = JSON.parse(userJson);
+      return { mode: "member", user };
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
-function setPassword(pw: string) {
-  if (typeof window === "undefined") return;
+function setMasterSession(pw: string) {
   sessionStorage.setItem(ADMIN_PASSWORD_KEY, pw);
 }
 
-function clearPassword() {
-  if (typeof window === "undefined") return;
+function setMemberSession(email: string, token: string, user: any) {
+  sessionStorage.setItem(ADMIN_EMAIL_KEY, email);
+  sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+  sessionStorage.setItem(ADMIN_USER_KEY, JSON.stringify(user));
+}
+
+function clearSession() {
   sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
+  sessionStorage.removeItem(ADMIN_EMAIL_KEY);
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  sessionStorage.removeItem(ADMIN_USER_KEY);
+}
+
+function hasSession(): boolean {
+  return getStoredSession() !== null;
 }
 
 async function api(path: string, opts: RequestInit = {}) {
-  const pw = getPassword();
+  const session = getStoredSession();
   const headers: Record<string, string> = {
     "content-type": "application/json",
     ...(opts.headers as Record<string, string>),
   };
-  if (pw) headers["x-admin-password"] = pw;
+  if (session?.mode === "master") {
+    headers["x-admin-password"] = sessionStorage.getItem(ADMIN_PASSWORD_KEY) || "";
+  } else if (session?.mode === "member" && session.user) {
+    headers["x-admin-email"] = session.user.email;
+    headers["x-admin-token"] = sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
+    headers["x-current-user-id"] = session.user.id;
+  }
   const res = await fetch(path, { ...opts, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -108,23 +148,35 @@ async function api(path: string, opts: RequestInit = {}) {
 // ─── Login Screen ──────────────────────────────────────────────────────
 
 function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [mode, setMode] = useState<"master" | "member">("master");
   const [pw, setPw] = useState("");
+  const [email, setEmail] = useState("");
+  const [memberPw, setMemberPw] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const payload =
+        mode === "master"
+          ? { password: pw }
+          : { email, password: memberPw };
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password: pw }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Invalid password");
+        throw new Error(err.error || "Invalid credentials");
       }
-      setPassword(pw);
+      const data = await res.json();
+      if (data.mode === "member" && data.user) {
+        setMemberSession(email, memberPw, data.user);
+      } else {
+        setMasterSession(pw);
+      }
       onLogin();
       toast.success("تم تسجيل الدخول");
     } catch (e: any) {
@@ -145,19 +197,73 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             لوحة تحكم راية المستقبل
           </h1>
           <p className="text-sm text-[#5A6B66] mt-1">
-            أدخل كلمة مرور المحرر للمتابعة
+            {mode === "master"
+              ? "ادخل بكلمة مرور المشرف العام"
+              : "ادخل ببريدك الإلكتروني وكلمة المرور"}
           </p>
         </div>
+
+        {/* Mode toggle */}
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-md mb-5">
+          <button
+            type="button"
+            onClick={() => setMode("master")}
+            className={
+              "flex-1 py-2 text-sm font-bold rounded transition-colors " +
+              (mode === "master"
+                ? "bg-white text-[#0A382F] shadow-sm"
+                : "text-[#5A6B66]")
+            }
+          >
+            المشرف العام
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("member")}
+            className={
+              "flex-1 py-2 text-sm font-bold rounded transition-colors " +
+              (mode === "member"
+                ? "bg-white text-[#0A382F] shadow-sm"
+                : "text-[#5A6B66]")
+            }
+          >
+            عضو هيئة التحرير
+          </button>
+        </div>
+
         <form onSubmit={submit} className="space-y-4">
-          <Input
-            type="password"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            placeholder="كلمة المرور"
-            required
-            className="h-12 rounded-md"
-            autoFocus
-          />
+          {mode === "master" ? (
+            <Input
+              type="password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder="كلمة مرور المشرف العام"
+              required
+              className="h-12 rounded-md"
+              autoFocus
+            />
+          ) : (
+            <>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="البريد الإلكتروني"
+                required
+                className="h-12 rounded-md"
+                autoFocus
+                dir="ltr"
+              />
+              <Input
+                type="password"
+                value={memberPw}
+                onChange={(e) => setMemberPw(e.target.value)}
+                placeholder="كلمة المرور"
+                required
+                className="h-12 rounded-md"
+              />
+            </>
+          )}
           <Button
             type="submit"
             disabled={loading}
@@ -166,11 +272,14 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             {loading ? "جارٍ التحقق..." : "دخول"}
           </Button>
         </form>
-        <p className="text-xs text-center mt-4 text-[#5A6B66]">
-          كلمة المرور الافتراضية: <code className="bg-slate-100 px-1.5 py-0.5 rounded">raya-admin-2026</code>
-          <br />
-          (يمكن تغييرها عبر متغير البيئة <code>ADMIN_PASSWORD</code>)
-        </p>
+        {mode === "master" && (
+          <p className="text-xs text-center mt-4 text-[#5A6B66]">
+            كلمة المرور الافتراضية:{" "}
+            <code className="bg-slate-100 px-1.5 py-0.5 rounded">
+              raya-admin-2026
+            </code>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -484,6 +593,151 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   );
 }
 
+// ─── Add Member Modal ──────────────────────────────────────────────────
+
+function AddMemberModal({
+  onClose,
+  onDone,
+}: {
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"editor" | "admin">("editor");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (name.trim().length < 2) {
+      toast.error("الاسم مطلوب (حرفان على الأقل)");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("بريد إلكتروني غير صالح");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("كلمة المرور يجب أن تكون ٦ أحرف على الأقل");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api("/api/users", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim(), email, password, role }),
+      });
+      toast.success("تم إضافة العضو بنجاح");
+      onDone();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="heading-display text-xl text-[#0A382F] flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-[#E69744]" />
+            إضافة عضو جديد
+          </h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <XCircle className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+              الاسم *
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="مثال: محمد أحمد"
+              className="h-11 rounded-md"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+              البريد الإلكتروني *
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="member@raya.edu"
+              className="h-11 rounded-md"
+              dir="ltr"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+              كلمة المرور * (٦ أحرف على الأقل)
+            </label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••"
+              className="h-11 rounded-md"
+              dir="ltr"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">
+              الدور
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("editor")}
+                className={
+                  "flex-1 py-2 text-sm font-bold rounded-md border transition-colors " +
+                  (role === "editor"
+                    ? "bg-[#0A382F] text-white border-[#0A382F]"
+                    : "bg-white text-[#5A6B66] border-[#D9E2DC]")
+                }
+              >
+                محرر
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("admin")}
+                className={
+                  "flex-1 py-2 text-sm font-bold rounded-md border transition-colors " +
+                  (role === "admin"
+                    ? "bg-[#0A382F] text-white border-[#0A382F]"
+                    : "bg-white text-[#5A6B66] border-[#D9E2DC]")
+                }
+              >
+                مشرف
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="border-t px-6 py-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
+          </Button>
+          <Button
+            onClick={save}
+            disabled={saving}
+            className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold"
+          >
+            <UserPlus className="h-4 w-4 ml-1" />
+            {saving ? "جارٍ الإضافة..." : "إضافة العضو"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────
 
 export default function AdminPage() {
@@ -498,9 +752,13 @@ export default function AdminPage() {
   const [showImport, setShowImport] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"articles" | "members">("articles");
+  const [members, setMembers] = useState<any[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
 
   useEffect(() => {
-    if (getPassword()) {
+    if (hasSession()) {
       setAuthed(true);
     }
     setChecking(false);
@@ -517,7 +775,7 @@ export default function AdminPage() {
     } catch (e: any) {
       if (e.message === "Unauthorized") {
         setAuthed(false);
-        clearPassword();
+        clearSession();
       } else {
         toast.error(e.message);
       }
@@ -529,6 +787,30 @@ export default function AdminPage() {
   useEffect(() => {
     if (authed) load();
   }, [authed, load]);
+
+  // ─── Members management (hooks must be before any early return) ─────
+  const loadMembers = useCallback(async () => {
+    setMembersLoading(true);
+    try {
+      const res = await api("/api/users");
+      setMembers(res.items || []);
+    } catch (e: any) {
+      if (e.message === "Unauthorized") {
+        setAuthed(false);
+        clearSession();
+      } else {
+        toast.error(e.message);
+      }
+    } finally {
+      setMembersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authed && activeTab === "members") {
+      loadMembers();
+    }
+  }, [authed, activeTab, loadMembers]);
 
   if (checking) {
     return (
@@ -566,8 +848,19 @@ export default function AdminPage() {
     }
   };
 
+  const deleteMember = async (id: string, name: string) => {
+    if (!confirm(`حذف العضو "${name}"؟`)) return;
+    try {
+      await api(`/api/users/${id}`, { method: "DELETE" });
+      toast.success("تم حذف العضو");
+      loadMembers();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   const logout = () => {
-    clearPassword();
+    clearSession();
     setAuthed(false);
   };
 
@@ -671,6 +964,37 @@ export default function AdminPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* ─── Tab Switcher ─── */}
+        <div className="flex gap-1 p-1 bg-white rounded-lg border border-[#D9E2DC] mb-6 max-w-md">
+          <button
+            onClick={() => setActiveTab("articles")}
+            className={
+              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+              (activeTab === "articles"
+                ? "bg-[#0A382F] text-white"
+                : "text-[#5A6B66] hover:bg-[#E9F2EB]")
+            }
+          >
+            <FileText className="h-4 w-4" />
+            المقالات
+          </button>
+          <button
+            onClick={() => setActiveTab("members")}
+            className={
+              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+              (activeTab === "members"
+                ? "bg-[#0A382F] text-white"
+                : "text-[#5A6B66] hover:bg-[#E9F2EB]")
+            }
+          >
+            <Users className="h-4 w-4" />
+            الأعضاء
+          </button>
+        </div>
+
+        {/* ═══════════════ ARTICLES TAB ═══════════════ */}
+        {activeTab === "articles" && (
+          <>
         {/* ─── Statistics Dashboard ─── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
@@ -1067,6 +1391,145 @@ export default function AdminPage() {
             </ol>
           </details>
         </div>
+          </>
+        )}
+
+        {/* ═══════════════ MEMBERS TAB ═══════════════ */}
+        {activeTab === "members" && (
+          <>
+            {/* Members header + add button */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-[#0A382F]">
+                  إدارة الأعضاء
+                </h2>
+                <p className="text-sm text-[#5A6B66] mt-1">
+                  أضف وحذف أعضاء هيئة التحرير — لكل عضو بريد إلكتروني وكلمة مرور خاصة
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowAddMember(true)}
+                className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold h-10"
+              >
+                <Plus className="h-4 w-4 ml-1" />
+                إضافة عضو
+              </Button>
+            </div>
+
+            {/* Members list */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#D9E2DC] overflow-hidden">
+              {membersLoading ? (
+                <div className="p-12 text-center text-[#5A6B66]">جارٍ التحميل...</div>
+              ) : members.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Users className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+                  <p className="text-[#5A6B66] mb-4">لا يوجد أعضاء مسجلون بعد</p>
+                  <p className="text-xs text-[#5A6B66]/60 mb-4">
+                    أضف أعضاء هيئة التحرير ليتمكنوا من تسجيل الدخول ببريدهم وكلمة مرورهم
+                  </p>
+                  <Button
+                    onClick={() => setShowAddMember(true)}
+                    className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold"
+                  >
+                    <Plus className="h-4 w-4 ml-1" />
+                    إضافة أول عضو
+                  </Button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#E9F2EB] text-[#0A382F]">
+                      <tr>
+                        <th className="text-right p-3 font-bold">الاسم</th>
+                        <th className="text-right p-3 font-bold">البريد الإلكتروني</th>
+                        <th className="text-right p-3 font-bold">الدور</th>
+                        <th className="text-right p-3 font-bold whitespace-nowrap">تاريخ الإضافة</th>
+                        <th className="text-center p-3 font-bold">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {members.map((m) => {
+                        const session = getStoredSession();
+                        const isSelf = session?.mode === "member" && session.user?.id === m.id;
+                        return (
+                          <tr
+                            key={m.id}
+                            className="border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50"
+                          >
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-[#0A382F] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                  {m.name?.charAt(0) || "?"}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-[#0A382F]">
+                                    {m.name || "—"}
+                                    {isSelf && (
+                                      <span className="ml-2 text-[10px] bg-[#E69744]/20 text-[#C77B2E] px-1.5 py-0.5 rounded font-normal">
+                                        أنت
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-[#5A6B66] text-xs" dir="ltr">
+                              {m.email}
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={
+                                  "inline-block px-2 py-0.5 rounded-full text-xs font-bold " +
+                                  (m.role === "admin"
+                                    ? "bg-[#E69744]/15 text-[#C77B2E]"
+                                    : "bg-blue-100 text-blue-700")
+                                }
+                              >
+                                {m.role === "admin" ? "مشرف" : "محرر"}
+                              </span>
+                            </td>
+                            <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+                              {new Date(m.createdAt).toLocaleDateString("ar-EG")}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={() => deleteMember(m.id, m.name || m.email)}
+                                disabled={isSelf}
+                                className={
+                                  "p-1.5 rounded transition-colors " +
+                                  (isSelf
+                                    ? "text-[#5A6B66]/30 cursor-not-allowed"
+                                    : "hover:bg-red-100 text-red-700")
+                                }
+                                title={isSelf ? "لا يمكنك حذف حسابك" : "حذف العضو"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Info note */}
+            <div className="mt-6 bg-[#E9F2EB] rounded-lg p-4 border border-[#D9E2DC]">
+              <h4 className="text-sm font-bold text-[#0A382F] mb-2">
+                ℹ️ كيف يعمل نظام الأعضاء؟
+              </h4>
+              <ul className="text-xs text-[#5A6B66] space-y-1 leading-relaxed list-disc list-inside">
+                <li>كل عضو يسجل الدخول ببريده الإلكتروني وكلمة المرور الخاصة به</li>
+                <li>المشرف العام يدخل بكلمة المرور الموحدة (الموجودة في متغير البيئة)</li>
+                <li>كل الأعضاء لهم نفس صلاحيات إدارة المقالات</li>
+                <li>لا يمكن للعضو حذف حسابه أثناء استخدامه</li>
+                <li>كلمات المرور مشفّرة بـ bcrypt — لا تُخزن كنص صريح</li>
+              </ul>
+            </div>
+          </>
+        )}
       </main>
 
       {showEditor && (
@@ -1080,6 +1543,12 @@ export default function AdminPage() {
         <ImportModal
           onClose={() => setShowImport(false)}
           onDone={load}
+        />
+      )}
+      {showAddMember && (
+        <AddMemberModal
+          onClose={() => setShowAddMember(false)}
+          onDone={loadMembers}
         />
       )}
     </div>
