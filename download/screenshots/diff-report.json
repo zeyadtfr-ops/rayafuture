@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Here is the **brutal, direct comparison** of the two sites. The current site (Image 2) is a **complete structural failure** compared to the reference (Image 1). It looks like a completely different, broken template.\n\n### **TOP 5 CRITICAL ISSUES (Priority Order)**\n\n*   **1. THE HERO SECTION IS DESTROYED (Layout & Content Mismatch)**\n    *   **Reference:** Has a clean, centered layout with a **circular logo**, large title \"رايه للمستقبل\", and a subtitle. Below that is a **complex 3-part grid**: A large featured article on the **right** (with an apple image and big text overlay) and a **stack of 2 smaller articles on the left**.\n    *   **Yours:** The logo is missing or misplaced. The complex grid is gone. You replaced it with a generic **3-column row of identical cards** (hands holding a plant). The entire visual hierarchy of the homepage entry point is wrong.\n\n*   **2. THE \"LATEST NEWS\" SECTION IS UPSIDE DOWN & BROKEN**\n    *   **Reference:** Uses a **\"Main + Sidebar\"** layout. The **Left side** is a numbered list (01, 02, 03...) of text-only headlines. The **Right side** is a 2-column grid of image cards.\n    *   **Yours:** You flipped it or broke it. You have a row of image cards at the top (which look like duplicates of the hero cards), and then you put the text list at the bottom in a weird horizontal strip or mixed format. The distinct \"Numbered List vs Image Grid\" split is completely lost.\n\n*   **3. MISSING SECTIONS & WRONG ORDER**\n    *   **Missing \"Most Viewed\" (الأكثر قراءة):** The reference has a specific section with large numbers (like \"25\", \"12\") highlighting top content. This is completely absent in your version.\n    *   **Wrong \"Latest Issues\" (أحدث عدد الفصلية):** In the reference, this is a grid of boxes with **large background numbers** (04, 03, 09...). In your version, these are just plain white boxes with small orange numbers at the top. The design style is totally different.\n\n*   **4. TYPOGRAPHY & SPACING IS MESSY**\n    *   **Font Sizes:** Your headlines are too small and lack the bold weight of the reference. The reference uses strong, large Arabic fonts for titles; yours looks thin and generic.\n    *   **Spacing:** Your site has huge, empty vertical gaps between sections (whitespace overload), whereas the reference is compact, dense, and information-rich. It looks like your CSS flex/grid containers are collapsing or have massive margins.\n\n*   **5. COLOR PALETTE IS WASHED OUT**\n    *   **Reference:** Deep, rich Forest Green (`#1a3c34` approx) for headers/footers, with warm Beige/Cream backgrounds for content areas.\n    *   **Yours:** The green looks lighter or more blue-ish. The backgrounds are too stark white or grey. The \"Gold/Yellow\" accent color used for numbers and buttons in the reference is present in yours but often applied to the wrong elements (e.g., on generic badges rather than structural numbers).\n\n---\n\n### **Summary of Failure**\nYou are not using the same **Grid System**. The reference relies on **Asymmetric Layouts** (Big box right, small stack left; List left, Grid right). Your site relies on **Symmetric, Boring Rows** (3 columns, then 3 columns). To fix this, you must scrap your current page structure and rebuild the HTML containers to match the Reference's **Split-Column** architecture.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1793291343,
+  "id": "20261030002844d8a854d47a9d430f",
+  "model": "glm-5v-turbo",
+  "object": "chat.completion",
+  "request_id": "20261030002844d8a854d47a9d430f",
+  "usage": {
+    "completion_tokens": 794,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 11461,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 12255
+  }
+}
