@@ -14,6 +14,11 @@ import {
   Upload,
   FileText,
   RefreshCw,
+  CheckSquare,
+  Square,
+  BarChart3,
+  Layers,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -491,6 +496,8 @@ export default function AdminPage() {
   const [editing, setEditing] = useState<Article | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     if (getPassword()) {
@@ -564,6 +571,68 @@ export default function AdminPage() {
     setAuthed(false);
   };
 
+  // ─── Bulk selection helpers ───────────────────────────────────────────
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      if (prev.size === articles.length) return new Set();
+      return new Set(articles.map((a) => a.id));
+    });
+  };
+
+  const clearSelection = () => setSelected(new Set());
+
+  const bulkAction = async (action: string) => {
+    if (selected.size === 0) {
+      toast.error("حدد مقالاً واحداً على الأقل");
+      return;
+    }
+    if (
+      action === "delete" &&
+      !confirm(`حذف ${selected.size} مقال نهائياً؟`)
+    ) {
+      return;
+    }
+    setBulkLoading(true);
+    try {
+      const res = await api("/api/articles/bulk", {
+        method: "POST",
+        body: JSON.stringify({ ids: Array.from(selected), action }),
+      });
+      toast.success(
+        `تم تنفيذ العملية على ${res.affected} مقال من أصل ${res.requested}`
+      );
+      clearSelection();
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // ─── Statistics ───────────────────────────────────────────────────────
+  const stats = {
+    total: articles.length,
+    published: articles.filter((a) => a.status === "PUBLISHED").length,
+    draft: articles.filter((a) => a.status === "DRAFT").length,
+    pending: articles.filter((a) => a.status === "PENDING_REVIEW").length,
+    approved: articles.filter((a) => a.status === "APPROVED").length,
+    rejected: articles.filter((a) => a.status === "REJECTED").length,
+  };
+  const categoriesCount = articles.reduce((acc, a) => {
+    acc[a.category] = (acc[a.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="min-h-screen bg-[#FBF4ED]">
       {/* Header */}
@@ -602,6 +671,155 @@ export default function AdminPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* ─── Statistics Dashboard ─── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-[#0A382F]/10 flex items-center justify-center flex-shrink-0">
+              <Layers className="h-5 w-5 text-[#0A382F]" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#0A382F]">{stats.total}</div>
+              <div className="text-[11px] text-[#5A6B66]">إجمالي</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-green-100 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="h-5 w-5 text-green-700" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-green-700">{stats.published}</div>
+              <div className="text-[11px] text-[#5A6B66]">منشورة</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-slate-100 flex items-center justify-center flex-shrink-0">
+              <FileText className="h-5 w-5 text-slate-700" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-slate-700">{stats.draft}</div>
+              <div className="text-[11px] text-[#5A6B66]">مسودات</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <Send className="h-5 w-5 text-amber-700" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-amber-700">{stats.pending}</div>
+              <div className="text-[11px] text-[#5A6B66]">بانتظار المراجعة</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="h-5 w-5 text-blue-700" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-700">{stats.approved}</div>
+              <div className="text-[11px] text-[#5A6B66]">معتمدة</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-red-100 flex items-center justify-center flex-shrink-0">
+              <XCircle className="h-5 w-5 text-red-700" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-red-700">{stats.rejected}</div>
+              <div className="text-[11px] text-[#5A6B66]">مرفوضة</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Categories breakdown */}
+        {Object.keys(categoriesCount).length > 0 && (
+          <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="h-4 w-4 text-[#0A382F]" />
+              <h3 className="text-sm font-bold text-[#0A382F]">توزيع المقالات حسب القسم</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(categoriesCount)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, count]) => (
+                  <span
+                    key={cat}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A382F]/5 text-[#0A382F] text-xs font-medium"
+                  >
+                    {cat}
+                    <span className="bg-[#E69744]/20 text-[#C77B2E] px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      {count}
+                    </span>
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk actions bar — visible when items are selected */}
+        {selected.size > 0 && (
+          <div className="bg-[#0A382F] text-white rounded-lg p-3 mb-4 flex flex-wrap items-center gap-2 sticky top-[80px] z-30 shadow-lg">
+            <span className="text-sm font-bold flex items-center gap-2">
+              <CheckSquare className="h-4 w-4 text-[#E69744]" />
+              {selected.size} مقال محدد
+            </span>
+            <span className="opacity-30">|</span>
+            <button
+              onClick={() => bulkAction("publish")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              نشر الكل
+            </button>
+            <button
+              onClick={() => bulkAction("approve")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              اعتماد الكل
+            </button>
+            <button
+              onClick={() => bulkAction("send_to_review")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              إرسال للمراجعة
+            </button>
+            <button
+              onClick={() => bulkAction("unpublish")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-slate-600 hover:bg-slate-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              إلغاء النشر
+            </button>
+            <button
+              onClick={() => bulkAction("reject")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              رفض الكل
+            </button>
+            <button
+              onClick={() => bulkAction("delete")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              حذف الكل
+            </button>
+            <button
+              onClick={clearSelection}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white text-xs font-bold mr-auto"
+            >
+              إلغاء التحديد
+            </button>
+          </div>
+        )}
+
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row gap-3 mb-6 items-stretch md:items-center justify-between">
           <div className="flex flex-wrap gap-2 flex-1">
@@ -678,6 +896,19 @@ export default function AdminPage() {
               <table className="w-full text-sm">
                 <thead className="bg-[#E9F2EB] text-[#0A382F]">
                   <tr>
+                    <th className="p-3 font-bold w-10">
+                      <button
+                        onClick={toggleSelectAll}
+                        className="flex items-center justify-center"
+                        aria-label="تحديد الكل"
+                      >
+                        {selected.size === articles.length && articles.length > 0 ? (
+                          <CheckSquare className="h-5 w-5 text-[#E69744]" />
+                        ) : (
+                          <Square className="h-5 w-5 text-[#5A6B66]" />
+                        )}
+                      </button>
+                    </th>
                     <th className="text-right p-3 font-bold">العنوان</th>
                     <th className="text-right p-3 font-bold whitespace-nowrap">القسم</th>
                     <th className="text-right p-3 font-bold">الحالة</th>
@@ -690,8 +921,24 @@ export default function AdminPage() {
                   {articles.map((a) => (
                     <tr
                       key={a.id}
-                      className="border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50"
+                      className={
+                        "border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50 " +
+                        (selected.has(a.id) ? "bg-[#E69744]/10" : "")
+                      }
                     >
+                      <td className="p-3">
+                        <button
+                          onClick={() => toggleSelect(a.id)}
+                          className="flex items-center justify-center"
+                          aria-label="تحديد المقال"
+                        >
+                          {selected.has(a.id) ? (
+                            <CheckSquare className="h-5 w-5 text-[#E69744]" />
+                          ) : (
+                            <Square className="h-5 w-5 text-[#5A6B66]/60" />
+                          )}
+                        </button>
+                      </td>
                       <td className="p-3">
                         <div className="font-bold text-[#0A382F] line-clamp-1">
                           {a.title}
