@@ -192,40 +192,48 @@ export default function MagazineSections() {
             <div className="text-center text-ink/40 py-8">لا توجد مقالات</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featured.map((a, i) => (
-                <a
-                  key={a.id}
-                  href={a.sourceUrl || "#"}
-                  target={a.sourceUrl ? "_blank" : undefined}
-                  rel={a.sourceUrl ? "noopener noreferrer" : undefined}
-                  className="group block bg-white rounded-md overflow-hidden border border-border-warm hover:shadow-lg transition-shadow"
-                >
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden bg-forest">
-                    <img
-                      src={img(a)}
-                      alt={a.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
-                      {a.category}
+              {featured.map((a, i) => {
+                const isFirst = i === 0;
+                return (
+                  <a
+                    key={a.id}
+                    href={a.sourceUrl || "#"}
+                    target={a.sourceUrl ? "_blank" : undefined}
+                    rel={a.sourceUrl ? "noopener noreferrer" : undefined}
+                    className={
+                      "group block rounded-md overflow-hidden border transition-shadow hover:shadow-lg " +
+                      (isFirst
+                        ? "bg-forest text-paper border-forest"
+                        : "bg-white text-ink border-border-warm")
+                    }
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 overflow-hidden bg-forest">
+                      <img
+                        src={img(a)}
+                        alt={a.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
+                        {a.category}
+                      </div>
                     </div>
-                  </div>
-                  {/* Body */}
-                  <div className="p-5">
-                    <div className="text-[11px] text-ink/60 mb-1.5 flex items-center gap-1.5">
-                      <Calendar className="h-3 w-3" />
-                      {formatDate(a)}
+                    {/* Body */}
+                    <div className="p-5">
+                      <div className={"text-[11px] mb-1.5 flex items-center gap-1.5 " + (isFirst ? "text-paper/60" : "text-ink/60")}>
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(a)}
+                      </div>
+                      <h3 className={"text-lg font-bold leading-snug mb-2 group-hover:text-gold transition-colors " + (isFirst ? "text-paper" : "text-forest")}>
+                        {a.title}
+                      </h3>
+                      <p className={"text-sm leading-relaxed line-clamp-3 " + (isFirst ? "text-paper/75" : "text-ink/70")}>
+                        {excerpt(a)}
+                      </p>
                     </div>
-                    <h3 className="text-lg font-bold text-forest leading-snug mb-2 group-hover:text-gold transition-colors">
-                      {a.title}
-                    </h3>
-                    <p className="text-sm text-ink/70 leading-relaxed line-clamp-3">
-                      {excerpt(a)}
-                    </p>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
             </div>
           )}
         </div>
@@ -293,10 +301,10 @@ export default function MagazineSections() {
                     rel={a.sourceUrl ? "noopener noreferrer" : undefined}
                     className="group flex items-start gap-4 p-3 rounded-md hover:bg-white/60 transition-colors"
                   >
-                    <span className="text-3xl font-bold text-gold/40 leading-none flex-shrink-0 w-8">
+                    <span className="text-5xl font-bold text-gold/50 leading-none flex-shrink-0 w-12 tracking-tight">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pt-1">
                       <h3 className="text-base font-bold text-forest mb-1 group-hover:text-gold transition-colors line-clamp-1">
                         {a.title}
                       </h3>
@@ -391,16 +399,16 @@ export default function MagazineSections() {
                 <a
                   key={c.name}
                   href="#news"
-                  className="group bg-white rounded-md p-5 border border-border-warm hover:border-gold hover:shadow-md transition-all"
+                  className="group bg-white rounded-md p-6 border border-border-warm hover:border-gold hover:shadow-md transition-all relative overflow-hidden"
                 >
-                  <div className="text-3xl font-bold text-gold mb-2">
+                  <div className="text-6xl font-bold text-gold/40 mb-3 leading-none tracking-tight">
                     {String(c.count).padStart(2, "0")}
                   </div>
                   <h3 className="text-base font-bold text-forest mb-1 group-hover:text-gold transition-colors">
                     {c.name}
                   </h3>
                   {c.desc && (
-                    <p className="text-xs text-ink/60">{c.desc}</p>
+                    <p className="text-xs text-ink/60 leading-relaxed">{c.desc}</p>
                   )}
                 </a>
               ))}

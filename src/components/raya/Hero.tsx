@@ -41,33 +41,33 @@ export default function Hero() {
       <div className="absolute -bottom-40 -right-20 w-[520px] h-[520px] rounded-full bg-gold/15 blur-3xl" />
 
       {/* Content */}
-      <div className="container mx-auto px-4 relative z-10 py-16 lg:py-24">
+      <div className="container mx-auto px-4 relative z-10 py-20 lg:py-28">
         <div className="max-w-3xl">
-          <p className="text-xs text-gold tracking-[0.2em] uppercase mb-4 font-medium">
+          <p className="text-xs text-gold tracking-[0.3em] uppercase mb-6 font-bold">
             Higher Institute · Raya E-Magazine
           </p>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] mb-4">
+          <h1 className="heading-display text-6xl sm:text-7xl lg:text-8xl font-bold leading-[1.05] mb-6 tracking-tight">
             راية المستقبل
           </h1>
-          <p className="text-lg sm:text-xl text-paper/80 mb-6 leading-relaxed">
+          <p className="text-xl sm:text-2xl text-paper/85 mb-8 leading-relaxed font-medium">
             مجلة طلابية رقمية تهتم بقضايا التعليم والشأن الطالبي
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-paper/70">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-paper/70 border-t border-white/10 pt-6">
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 text-gold" />
               ٢٩ أكتوبر ٢٠٢٦
             </span>
-            <span className="opacity-40">·</span>
+            <span className="opacity-30">·</span>
             <a
               href="#about"
-              className="hover:text-gold transition-colors"
+              className="hover:text-gold transition-colors font-medium"
             >
               عن المجلة
             </a>
-            <span className="opacity-40">·</span>
+            <span className="opacity-30">·</span>
             <a
               href="#news"
-              className="hover:text-gold transition-colors"
+              className="hover:text-gold transition-colors font-medium"
             >
               كل الأخبار
             </a>
