@@ -51,42 +51,61 @@
   --color-raya-sage: #E9F2EB;
   --color-raya-deep: #063528;
   --color-raya-light-orange: #FFF0DF;
+
+  /* Raya Future Magazine — reference-matching palette */
+  --color-forest: #032B22;
+  --color-brand-green: #063D30;
+  --color-paper: #F6F2E9;
+  --color-paper-warm: #EFE9DA;
+  --color-gold: #C9A04A;
+  --color-ink: #202820;
+  --color-border-warm: #DED6C5;
 }
 
 :root {
   --radius: 0.625rem;
+  /* Raya Future Magazine — color system matching reference site */
+  --forest: #032B22;        /* dark forest green — header, footer, hero */
+  --brand: #063D30;         /* medium brand green — secondary sections */
+  --paper: #F6F2E9;         /* warm cream paper — main background */
+  --paper-warm: #EFE9DA;    /* warmer cream — alternating sections */
+  --gold: #C9A04A;          /* gold accent — buttons, links, highlights */
+  --ink: #202820;           /* dark text on light bg */
+  --paper-foreground: #202820;
+  --border-warm: #DED6C5;   /* warm border for cards */
+
   /* Light mode based on Raya cream/forest palette */
-  --background: #FBF4ED;
-  --foreground: #0A382F;
+  --background: #F6F2E9;
+  --foreground: #202820;
   --card: #FFFFFF;
-  --card-foreground: #0A382F;
+  --card-foreground: #202820;
   --popover: #FFFFFF;
-  --popover-foreground: #0A382F;
-  --primary: #0A382F;
-  --primary-foreground: #FBF4ED;
-  --secondary: #E9F2EB;
-  --secondary-foreground: #0A382F;
-  --muted: #E9F2EB;
+  --popover-foreground: #202820;
+  --primary: #032B22;
+  --primary-foreground: #F6F2E9;
+  --secondary: #EFE9DA;
+  --secondary-foreground: #032B22;
+  --muted: #EFE9DA;
   --muted-foreground: #5A6B66;
-  --accent: #E69744;
+  --accent: #C9A04A;
   --accent-foreground: #FFFFFF;
   --destructive: #B91C1C;
-  --border: #D9E2DC;
-  --input: #E9F2EB;
-  --ring: #E69744;
-  --chart-1: #0A382F;
-  --chart-2: #115B46;
-  --chart-3: #E69744;
+  --border: #DED6C5;
+  --input: #EFE9DA;
+  --ring: #C9A04A;
+  --chart-1: #032B22;
+  --chart-2: #063D30;
+  --chart-3: #C9A04A;
   --chart-4: #8FB3A8;
-  --chart-5: #C77B2E;
+  --chart-5: #A07B2E;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0A382F;
-  --sidebar-primary: #0A382F;
-  --sidebar-primary-foreground: #FBF4ED;
-  --sidebar-accent: #E9F2EB;
-  --sidebar-accent-foreground: #0A382F;
-  --sidebar-border: #D9E2DC;
-  --sidebar-ring: #E69744;
+  --sidebar-foreground: #032B22;
+  --sidebar-primary: #032B22;
+  --sidebar-primary-foreground: #F6F2E9;
+  --sidebar-accent: #EFE9DA;
+  --sidebar-accent-foreground: #032B22;
+  --sidebar-border: #DED6C5;
+  --sidebar-ring: #C9A04A;
 }
 
 .dark {

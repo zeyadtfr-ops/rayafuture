@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Mail, Send, Facebook, Globe, ArrowUpRight } from "lucide-react";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -12,69 +9,31 @@ export default function Footer() {
   const subscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    toast.success("تم اشتراكك بنجاح! ستصلك آخر الأخبار والإصدارات على بريدك.");
+    alert("تم اشتراكك بنجاح! ستصلك آخر الأخبار والإصدارات على بريدك.");
     setEmail("");
   };
 
   return (
-    <footer id="contact" className="bg-[#06241D] text-white">
-      {/* Subscribe strip */}
-      <div className="border-b border-white/10">
-        <div className="container mx-auto px-4 py-10">
-          <div className="grid md:grid-cols-2 gap-6 items-center">
-            <div>
-              <h3 className="heading-display text-2xl md:text-3xl text-white mb-2">
-                اشترك في نشرتنا البريدية
-              </h3>
-              <p className="text-white/70 text-sm leading-relaxed">
-                كن أول من يعرف عن الأعداد الجديدة، الفعاليات، والدعوات للمشاركة في المجلة.
-              </p>
-            </div>
-            <form onSubmit={subscribe} className="flex flex-col sm:flex-row gap-3">
-              <Input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="بريدك الإلكتروني"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-[#E69744] h-12 rounded-md"
-              />
-              <Button
-                type="submit"
-                className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold h-12 px-6 rounded-md whitespace-nowrap"
-              >
-                <Send className="h-4 w-4 ml-1" />
-                اشترك الآن
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* Main footer */}
-      <div className="container mx-auto px-4 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+    <footer className="bg-forest text-paper">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-14 w-14 rounded-full overflow-hidden shadow-md ring-2 ring-[#E69744]/40 bg-white">
-                <img
-                  src="/raya-logo.jpeg"
-                  alt="شعار راية المستقبل"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <div className="heading-display text-xl">راية المستقبل</div>
-                <div className="text-[10px] tracking-[0.2em] text-[#E69744] uppercase">
-                  RAYA FUTURE
-                </div>
+          <div className="lg:col-span-1">
+            <div className="mb-4">
+              <div className="text-lg font-bold mb-1">راية المستقبل</div>
+              <div className="text-[10px] tracking-[0.2em] text-gold uppercase">
+                RAYA · E-MAGAZINE
               </div>
             </div>
-            <p className="text-white/65 text-sm leading-relaxed mb-5 max-w-sm">
-              معهد راية العالي للإدارة والتجارة الخارجية — صرح تعليمي تحت إشراف وزارة
-              التعليم العالي، تأسس بالقرار الوزاري رقم ٤١٥١ لسنة ٢٠١٨، ويمنح درجة البكالوريوس
-              في التجارة المعادلة لدرجات الجامعات المصرية.
+            <p className="text-sm text-paper/65 leading-relaxed mb-4">
+              مجلة طلابية رقمية تهتم بقضايا التعليم والشأن الطالبي
+            </p>
+            <div className="text-xs font-bold mb-2 text-paper/80">
+              عن المجلة
+            </div>
+            <p className="text-xs text-paper/60 leading-relaxed mb-4">
+              راية المستقبل مجلة طلابية رقمية تعني بقضايا التعليم والأخبار
+              الطلابية والأنشطة والفعاليات والفرص التعليمية.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -82,86 +41,170 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="h-9 w-9 rounded-full bg-white/5 hover:bg-[#E69744] flex items-center justify-center transition-colors"
+                className="h-9 w-9 rounded-md bg-white/5 hover:bg-gold flex items-center justify-center transition-colors"
               >
                 <Facebook className="h-4 w-4" />
               </a>
-              {[Instagram].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  aria-label="social"
-                  className="h-9 w-9 rounded-full bg-white/5 hover:bg-[#E69744] flex items-center justify-center transition-colors"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+              <a
+                href="#"
+                aria-label="Official site"
+                className="h-9 w-9 rounded-md bg-white/5 hover:bg-gold flex items-center justify-center transition-colors"
+              >
+                <Globe className="h-4 w-4" />
+              </a>
             </div>
           </div>
 
-          {/* Links: Magazine */}
+          {/* روابط */}
           <div>
-            <h4 className="font-bold text-white mb-4 text-sm">المجلة</h4>
-            <ul className="space-y-2.5 text-sm text-white/65">
-              <li><a href="#about" className="hover:text-[#E69744] transition-colors">عن المجلة</a></li>
-              <li><a href="#leadership" className="hover:text-[#E69744] transition-colors">كلمات القيادات</a></li>
-              <li><a href="#sections" className="hover:text-[#E69744] transition-colors">أقسام المجلة</a></li>
-              <li><a href="#issues" className="hover:text-[#E69744] transition-colors">الإصدارات</a></li>
-              <li><a href="#gallery" className="hover:text-[#E69744] transition-colors">معرض الوسائط</a></li>
-            </ul>
-          </div>
-
-          {/* Links: Participate */}
-          <div>
-            <h4 className="font-bold text-white mb-4 text-sm">المشاركة</h4>
-            <ul className="space-y-2.5 text-sm text-white/65">
-              <li><a href="#contribute" className="hover:text-[#E69744] transition-colors">شارك معنا</a></li>
-              <li><a href="#" className="hover:text-[#E69744] transition-colors">فريق التحرير</a></li>
-              <li><a href="#" className="hover:text-[#E69744] transition-colors">سياسة النشر</a></li>
-              <li><a href="#" className="hover:text-[#E69744] transition-colors">حقوق المساهمين</a></li>
-              <li><a href="#" className="hover:text-[#E69744] transition-colors">الانضمام للفريق</a></li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="col-span-2 md:col-span-1">
-            <h4 className="font-bold text-white mb-4 text-sm">تواصل معنا</h4>
-            <ul className="space-y-3 text-sm text-white/65">
-              <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 text-[#E69744] mt-0.5 flex-shrink-0" />
-                <span>دمياط الجديدة، الحي الثاني، أمام نادي المستقبل</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-[#E69744] flex-shrink-0" />
-                <a href="mailto:rayaedu2@gmail.com" className="hover:text-[#E69744]">
-                  rayaedu2@gmail.com
+            <h4 className="font-bold text-sm mb-4 text-paper/90">
+              روابط
+            </h4>
+            <ul className="space-y-2.5 text-sm text-paper/65">
+              <li>
+                <a href="#home" className="hover:text-gold transition-colors">
+                  الرئيسية
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[#E69744] flex-shrink-0" />
-                <span dir="ltr">+20 10 3083 0822</span>
+              <li>
+                <a href="#news" className="hover:text-gold transition-colors">
+                  أخبار
+                </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-[#E69744] flex-shrink-0" />
-                <span dir="ltr">واتساب: +20 10 3083 0811</span>
+              <li>
+                <a href="#articles" className="hover:text-gold transition-colors">
+                  مقالات
+                </a>
+              </li>
+              <li>
+                <a href="#events" className="hover:text-gold transition-colors">
+                  فعاليات
+                </a>
+              </li>
+              <li>
+                <a href="#opportunities" className="hover:text-gold transition-colors">
+                  فرص تعليمية
+                </a>
+              </li>
+              <li>
+                <a href="#about" className="hover:text-gold transition-colors">
+                  هيئة التحرير
+                </a>
               </li>
             </ul>
+          </div>
+
+          {/* الأقسام */}
+          <div>
+            <h4 className="font-bold text-sm mb-4 text-paper/90">
+              الأقسام
+            </h4>
+            <ul className="space-y-2.5 text-sm text-paper/65">
+              <li>
+                <a href="#news" className="hover:text-gold transition-colors">
+                  أخبار
+                </a>
+              </li>
+              <li>
+                <a href="#activities" className="hover:text-gold transition-colors">
+                  أنشطة طلابية
+                </a>
+              </li>
+              <li>
+                <a href="#news" className="hover:text-gold transition-colors">
+                  تربية وتعليم
+                </a>
+              </li>
+              <li>
+                <a href="#news" className="hover:text-gold transition-colors">
+                  حوار
+                </a>
+              </li>
+              <li>
+                <a href="#news" className="hover:text-gold transition-colors">
+                  رأي
+                </a>
+              </li>
+              <li>
+                <a href="#opportunities" className="hover:text-gold transition-colors">
+                  فرص تعليمية
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* تواصل */}
+          <div>
+            <h4 className="font-bold text-sm mb-4 text-paper/90">
+              تواصل
+            </h4>
+            <ul className="space-y-2.5 text-sm text-paper/65">
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gold flex-shrink-0" />
+                <a
+                  href="mailto:raya@example.edu.eg"
+                  className="hover:text-gold transition-colors"
+                  dir="ltr"
+                >
+                  raya@example.edu.eg
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="hover:text-gold transition-colors flex items-center gap-1.5"
+                >
+                  نموذج التواصل
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="hover:text-gold transition-colors flex items-center gap-1.5"
+                >
+                  أرسل مقالاً
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </li>
+            </ul>
+
+            {/* Subscribe form */}
+            <form onSubmit={subscribe} className="mt-6">
+              <div className="flex">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="بريدك الإلكتروني"
+                  className="flex-1 px-3 py-2 bg-white/5 border border-white/10 text-paper placeholder:text-paper/40 text-sm rounded-r-md focus:outline-none focus:border-gold"
+                />
+                <button
+                  type="submit"
+                  className="bg-gold hover:bg-gold/90 text-white px-4 rounded-l-md transition-colors"
+                  aria-label="اشترك"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10">
-        <div className="container mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-[12px] text-white/55">
-          <div>
-            © ٢٠٢٦ مجلة راية المستقبل — معهد راية العالي. جميع الحقوق محفوظة.
-          </div>
+      <div className="border-t border-white/5">
+        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-paper/55">
+          <div>© راية المستقبل — جميع الحقوق محفوظة.</div>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-[#E69744] transition-colors">سياسة الخصوصية</a>
-            <span className="opacity-30">|</span>
-            <a href="#" className="hover:text-[#E69744] transition-colors">شروط الاستخدام</a>
-            <span className="opacity-30">|</span>
-            <a href="#" className="hover:text-[#E69744] transition-colors">خريطة الموقع</a>
+            <a href="#" className="hover:text-gold transition-colors">
+              سياسة الخصوصية
+            </a>
+            <span className="opacity-30">·</span>
+            <a href="#" className="hover:text-gold transition-colors">
+              الشروط
+            </a>
           </div>
         </div>
       </div>
