@@ -206,7 +206,7 @@ export default function MagazineSections() {
                       src={img(a)}
                       alt={a.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      eager={true}
                     />
                     <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
                       {a.category}
@@ -253,7 +253,7 @@ export default function MagazineSections() {
                       src={img(a)}
                       alt={a.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      eager={true}
                     />
                     <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
                       {a.category}
@@ -467,7 +467,7 @@ export default function MagazineSections() {
                         src={img(a)}
                         alt={a.title}
                         className="w-full h-full object-cover"
-                        loading="lazy"
+                        eager={true}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
