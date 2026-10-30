@@ -83,13 +83,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "مجلة راية المستقبل",
-    description:
-      "منصة رقمية تنقل صوت الطلاب وحكاية معهد راية العالي للإدارة والتجارة الخارجية.",
-    images: ["/images/hero-campus.jpg"],
-  },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
