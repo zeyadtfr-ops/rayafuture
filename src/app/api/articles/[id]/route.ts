@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdminAuthorized, requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 const ALLOWED_STATUSES = new Set([
   "DRAFT",
@@ -132,6 +133,7 @@ export async function PUT(
   }
 
   const updated = await db.article.update({ where: { id }, data });
+  await logAction({ action: body.status ? "publish" : "update", entity: "article", entityId: id, details: `Updated: ${updated.title}` });
   return NextResponse.json(updated);
 }
 
@@ -146,7 +148,9 @@ export async function DELETE(
   }
   const { id } = await params;
   try {
+    const existing = await db.article.findUnique({ where: { id }, select: { title: true } });
     await db.article.delete({ where: { id } });
+    await logAction({ action: "delete", entity: "article", entityId: id, details: `Deleted: ${existing?.title || id}` });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

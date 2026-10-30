@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdminAuthorized, requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 const ALLOWED_STATUSES = new Set([
   "DRAFT",
@@ -140,5 +141,6 @@ export async function POST(req: NextRequest) {
   }
 
   const article = await db.article.create({ data });
+  await logAction({ action: "create", entity: "article", entityId: article.id, details: `Created: ${article.title}` });
   return NextResponse.json(article, { status: 201 });
 }

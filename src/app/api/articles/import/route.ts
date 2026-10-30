@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 function slugifyArabic(input: string): string {
   const base = input
@@ -124,6 +125,8 @@ export async function POST(req: NextRequest) {
       errors.push({ index: i, message: e?.message || "Unknown error" });
     }
   }
+
+  await logAction({ action: "import", entity: "article", details: `Imported ${created} articles (${skipped} skipped, ${failed} failed)` });
 
   return NextResponse.json({
     created,

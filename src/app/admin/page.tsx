@@ -901,7 +901,7 @@ export default function AdminPage() {
   const [showImport, setShowImport] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"articles" | "members" | "categories">("articles");
+  const [activeTab, setActiveTab] = useState<"articles" | "members" | "categories" | "analytics" | "audit">("articles");
   const [members, setMembers] = useState<any[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -909,6 +909,10 @@ export default function AdminPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [tags, setTags] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
 
   useEffect(() => {
     if (hasSession()) {
@@ -994,6 +998,39 @@ export default function AdminPage() {
       toast.error(e.message);
     }
   };
+
+  // ─── Analytics & Audit ──────────────────────────────────────────────
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    try {
+      const data = await api("/api/analytics");
+      setAnalytics(data);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
+  const loadAuditLogs = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const data = await api("/api/audit-logs?limit=50");
+      setAuditLogs(data.items || []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authed && activeTab === "analytics") loadAnalytics();
+  }, [authed, activeTab, loadAnalytics]);
+
+  useEffect(() => {
+    if (authed && activeTab === "audit") loadAuditLogs();
+  }, [authed, activeTab, loadAuditLogs]);
 
   if (checking) {
     return (
@@ -1184,6 +1221,30 @@ export default function AdminPage() {
           >
             <Users className="h-4 w-4" />
             الأعضاء
+          </button>
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={
+              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+              (activeTab === "analytics"
+                ? "bg-[#0A382F] text-white"
+                : "text-[#5A6B66] hover:bg-[#E9F2EB]")
+            }
+          >
+            <BarChart3 className="h-4 w-4" />
+            التحليلات
+          </button>
+          <button
+            onClick={() => setActiveTab("audit")}
+            className={
+              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+              (activeTab === "audit"
+                ? "bg-[#0A382F] text-white"
+                : "text-[#5A6B66] hover:bg-[#E9F2EB]")
+            }
+          >
+            <FileText className="h-4 w-4" />
+            السجل
           </button>
         </div>
 
@@ -1799,6 +1860,226 @@ export default function AdminPage() {
             <div className="mt-8">
               <h3 className="text-lg font-bold text-[#0A382F] mb-4">الوسوم (Tags)</h3>
               <TagsManager />
+            </div>
+          </>
+        )}
+
+        {/* ═══════════════ ANALYTICS TAB ═══════════════ */}
+        {activeTab === "analytics" && (
+          <>
+            {analyticsLoading ? (
+              <div className="text-center py-12 text-[#5A6B66]">جارٍ تحميل التحليلات...</div>
+            ) : analytics ? (
+              <>
+                <h2 className="text-2xl font-bold text-[#0A382F] mb-6">لوحة التحليلات</h2>
+
+                {/* Top stats grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-[#0A382F]">{analytics.content.totalArticles}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">إجمالي المقالات</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-green-600">{analytics.content.published}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">منشورة</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-amber-600">{analytics.content.drafts}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">مسودات</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-blue-600">{analytics.users.total}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">مستخدمون</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-[#E69744]">{analytics.misc.totalSubscribers}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">مشتركون</div>
+                  </div>
+                  <div className="bg-white rounded-lg border border-[#D9E2DC] p-4 text-center">
+                    <div className="text-3xl font-bold text-red-600">{analytics.misc.unreadMsgs}</div>
+                    <div className="text-xs text-[#5A6B66] mt-1">رسائل غير مقروءة</div>
+                  </div>
+                </div>
+
+                {/* Charts row */}
+                <div className="grid lg:grid-cols-2 gap-6 mb-8">
+                  {/* Daily activity chart */}
+                  <div className="bg-white rounded-xl border border-[#D9E2DC] p-6">
+                    <h3 className="font-bold text-[#0A382F] mb-4 flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-[#E69744]" />
+                      نشاط النشر (آخر ٧ أيام)
+                    </h3>
+                    <div className="flex items-end justify-between gap-2 h-40">
+                      {analytics.charts.dailyActivity.map((d: any, i: number) => (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div className="w-full bg-[#0A382F] rounded-t-md transition-all hover:bg-[#E69744]" style={{ height: `${Math.max(d.count * 30, 4)}px` }} title={`${d.count} مقال`} />
+                          <span className="text-[9px] text-[#5A6B66] whitespace-nowrap">{d.date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Category distribution */}
+                  <div className="bg-white rounded-xl border border-[#D9E2DC] p-6">
+                    <h3 className="font-bold text-[#0A382F] mb-4 flex items-center gap-2">
+                      <Layers className="h-5 w-5 text-[#E69744]" />
+                      توزيع المقالات حسب القسم
+                    </h3>
+                    <div className="space-y-2">
+                      {analytics.charts.categoryDist.slice(0, 6).map((c: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-xs text-[#5A6B66] w-24 truncate">{c.name}</span>
+                          <div className="flex-1 bg-[#E9F2EB] rounded-full h-5 overflow-hidden">
+                            <div className="bg-[#E69744] h-full rounded-full flex items-center justify-start px-2" style={{ width: `${Math.max((c.count / analytics.content.totalArticles) * 100, 8)}%` }}>
+                              <span className="text-[10px] text-white font-bold">{c.count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* User breakdown + Source distribution */}
+                <div className="grid lg:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white rounded-xl border border-[#D9E2DC] p-6">
+                    <h3 className="font-bold text-[#0A382F] mb-4">توزيع المستخدمين</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-[#0A382F]">{analytics.users.students}</div>
+                        <div className="text-xs text-[#5A6B66]">طلاب</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{analytics.users.editors}</div>
+                        <div className="text-xs text-[#5A6B66]">محررون</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-[#E69744]">{analytics.users.admins}</div>
+                        <div className="text-xs text-[#5A6B66]">مشرفون</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-[#D9E2DC] p-6">
+                    <h3 className="font-bold text-[#0A382F] mb-4">مصادر المحتوى</h3>
+                    <div className="space-y-2">
+                      {analytics.charts.sourceDist.map((s: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                          <span className="text-[#5A6B66]">
+                            {s.name === "facebook" ? "فيسبوك" : s.name === "external_magazine" ? "موقع خارجي" : s.name === "student" ? "طلاب" : s.name === "test" ? "تجريبي" : s.name}
+                          </span>
+                          <span className="font-bold text-[#0A382F]">{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent audit logs */}
+                {analytics.recentLogs && analytics.recentLogs.length > 0 && (
+                  <div className="bg-white rounded-xl border border-[#D9E2DC] p-6">
+                    <h3 className="font-bold text-[#0A382F] mb-4">آخر العمليات</h3>
+                    <div className="space-y-2">
+                      {analytics.recentLogs.slice(0, 5).map((log: any) => (
+                        <div key={log.id} className="flex items-center gap-3 text-sm border-b border-[#D9E2DC] pb-2 last:border-0">
+                          <span className={
+                            "inline-block px-2 py-0.5 rounded text-[10px] font-bold " +
+                            (log.action === "create" ? "bg-green-100 text-green-700" :
+                             log.action === "delete" ? "bg-red-100 text-red-700" :
+                             log.action === "publish" ? "bg-blue-100 text-blue-700" :
+                             log.action === "import" ? "bg-purple-100 text-purple-700" :
+                             "bg-slate-100 text-slate-700")
+                          }>
+                            {log.action}
+                          </span>
+                          <span className="text-[#5A6B66] text-xs flex-1 truncate">{log.details || log.entity}</span>
+                          <span className="text-[#5A6B66] text-xs whitespace-nowrap">
+                            {new Intl.DateTimeFormat("ar-EG", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(log.createdAt))}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12 text-[#5A6B66]">تعذر تحميل التحليلات</div>
+            )}
+          </>
+        )}
+
+        {/* ═══════════════ AUDIT LOGS TAB ═══════════════ */}
+        {activeTab === "audit" && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-[#0A382F]">سجل التدقيق</h2>
+                <p className="text-sm text-[#5A6B66] mt-1">سجل كامل لكل العمليات الإدارية</p>
+              </div>
+              <Button
+                onClick={loadAuditLogs}
+                disabled={auditLoading}
+                variant="outline"
+                className="border-[#0A382F] text-[#0A382F] h-10"
+              >
+                <RefreshCw className={"h-4 w-4 " + (auditLoading ? "animate-spin" : "")} />
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-[#D9E2DC] overflow-hidden">
+              {auditLoading ? (
+                <div className="p-12 text-center text-[#5A6B66]">جارٍ التحميل...</div>
+              ) : auditLogs.length === 0 ? (
+                <div className="p-12 text-center">
+                  <FileText className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+                  <p className="text-[#5A6B66]">لا توجد سجلات بعد</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#E9F2EB] text-[#0A382F]">
+                      <tr>
+                        <th className="text-right p-3 font-bold">العملية</th>
+                        <th className="text-right p-3 font-bold">النوع</th>
+                        <th className="text-right p-3 font-bold">التفاصيل</th>
+                        <th className="text-right p-3 font-bold">بواسطة</th>
+                        <th className="text-right p-3 font-bold whitespace-nowrap">التوقيت</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditLogs.map((log) => (
+                        <tr key={log.id} className="border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50">
+                          <td className="p-3">
+                            <span className={
+                              "inline-block px-2 py-0.5 rounded text-[10px] font-bold " +
+                              (log.action === "create" ? "bg-green-100 text-green-700" :
+                               log.action === "delete" ? "bg-red-100 text-red-700" :
+                               log.action === "publish" ? "bg-blue-100 text-blue-700" :
+                               log.action === "import" ? "bg-purple-100 text-purple-700" :
+                               log.action === "bulk" ? "bg-orange-100 text-orange-700" :
+                               "bg-slate-100 text-slate-700")
+                            }>
+                              {log.action === "create" ? "إنشاء" :
+                               log.action === "update" ? "تعديل" :
+                               log.action === "delete" ? "حذف" :
+                               log.action === "publish" ? "نشر" :
+                               log.action === "import" ? "استيراد" :
+                               log.action === "bulk" ? "جماعي" :
+                               log.action}
+                            </span>
+                          </td>
+                          <td className="p-3 text-xs text-[#5A6B66]">{log.entity}</td>
+                          <td className="p-3 text-xs text-[#5A6B66] max-w-xs truncate">{log.details || "—"}</td>
+                          <td className="p-3 text-xs text-[#5A6B66]">{log.actorName || "—"}</td>
+                          <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+                            {new Intl.DateTimeFormat("ar-EG", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(log.createdAt))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </>
         )}

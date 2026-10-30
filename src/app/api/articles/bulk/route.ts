@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { logAction } from "@/lib/audit";
 
 const ACTIONS = new Set([
   "publish",
@@ -94,6 +95,8 @@ export async function POST(req: NextRequest) {
       }
     }
   }
+
+  await logAction({ action: "bulk", entity: "article", details: `Bulk ${action}: ${affected}/${ids.length} articles` });
 
   return NextResponse.json({
     ok: true,

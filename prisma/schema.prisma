@@ -171,3 +171,21 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
 }
+
+// ─── Audit Logs ─────────────────────────────────────────────────────────
+// Tracks all administrative actions for security and accountability.
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "create" | "update" | "delete" | "publish" | "import" | "login" | "bulk"
+  entity    String   // "article" | "user" | "category" | "tag" | "contact" | "newsletter"
+  entityId  String?
+  actorId   String?  // user ID of the actor (null for master password)
+  actorName String?  // display name or "master"
+  details   String?  // JSON string with additional context
+  createdAt DateTime @default(now())
+
+  @@index([entity, action])
+  @@index([actorId])
+  @@index([createdAt])
+}
