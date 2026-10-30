@@ -9,10 +9,12 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Plus,
   ArrowLeft,
   UserPlus,
   LogIn,
-  Plus,
+  Calendar,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,11 +41,11 @@ type Article = {
   publishedAt: string | null;
 };
 
-// ─── Session helpers (localStorage for students) ────────────────────────
+// ─── Session helpers ────────────────────────────────────────────────────
 
 const STUDENT_KEY = "raya_student_session";
 
-function getStudentSession(): StudentUser | null {
+function getStudentSession(): { user: StudentUser; token: string } | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(STUDENT_KEY);
@@ -58,17 +60,6 @@ function setStudentSession(user: StudentUser, token: string) {
   localStorage.setItem(STUDENT_KEY, JSON.stringify({ user, token }));
 }
 
-function getStudentToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(STUDENT_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw).token || null;
-  } catch {
-    return null;
-  }
-}
-
 function clearStudentSession() {
   localStorage.removeItem(STUDENT_KEY);
 }
@@ -80,8 +71,8 @@ async function studentApi(path: string, opts: RequestInit = {}) {
     ...(opts.headers as Record<string, string>),
   };
   if (session) {
-    headers["x-student-code"] = session.studentCode;
-    headers["x-student-token"] = getStudentToken() || "";
+    headers["x-student-code"] = session.user.studentCode;
+    headers["x-student-token"] = session.token;
   }
   const res = await fetch(path, { ...opts, headers });
   if (!res.ok) {
@@ -91,7 +82,13 @@ async function studentApi(path: string, opts: RequestInit = {}) {
   return res.json();
 }
 
-// ─── Auth Screen (Login + Register) ─────────────────────────────────────
+const AR_DATE = new Intl.DateTimeFormat("ar-EG", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+// ─── Auth Screen ────────────────────────────────────────────────────────
 
 function AuthScreen({ onAuth }: { onAuth: () => void }) {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -108,7 +105,6 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
         mode === "login"
           ? "/api/auth/student/login"
           : "/api/auth/student/register";
-
       const payload: any = { studentCode, password };
       if (mode === "register") payload.name = name;
 
@@ -117,13 +113,9 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "فشل العملية");
-      }
+      if (!res.ok) throw new Error(data.error || "فشل العملية");
 
-      // Store session
       setStudentSession(data.user, password);
       toast.success(
         mode === "login"
@@ -139,23 +131,20 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#032B22] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-forest px-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-[#C9A04A] to-[#A07B2E] mb-3">
-            <FileText className="h-7 w-7 text-white" />
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-gold to-[#A07B2E] mb-3">
+            <GraduationCap className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-[#032B22]">
-            بوابة الطلاب — راية المستقبل
+          <h1 className="text-2xl font-bold text-forest">
+            بوابة الطلاب
           </h1>
           <p className="text-sm text-[#5A6B66] mt-1">
-            {mode === "login"
-              ? "سجل دخولك بكود الطالب الخاص بك"
-              : "سجل حسابك الجديد بكود الطالب"}
+            مجلة راية المستقبل
           </p>
         </div>
 
-        {/* Mode toggle */}
         <div className="flex gap-1 p-1 bg-slate-100 rounded-md mb-5">
           <button
             type="button"
@@ -163,12 +152,12 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
             className={
               "flex-1 py-2 text-sm font-bold rounded transition-colors flex items-center justify-center gap-1.5 " +
               (mode === "login"
-                ? "bg-white text-[#032B22] shadow-sm"
+                ? "bg-white text-forest shadow-sm"
                 : "text-[#5A6B66]")
             }
           >
             <LogIn className="h-4 w-4" />
-            تسجيل دخول
+            دخول
           </button>
           <button
             type="button"
@@ -176,7 +165,7 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
             className={
               "flex-1 py-2 text-sm font-bold rounded transition-colors flex items-center justify-center gap-1.5 " +
               (mode === "register"
-                ? "bg-white text-[#032B22] shadow-sm"
+                ? "bg-white text-forest shadow-sm"
                 : "text-[#5A6B66]")
             }
           >
@@ -188,7 +177,7 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
         <form onSubmit={submit} className="space-y-4">
           {mode === "register" && (
             <div>
-              <label className="block text-sm font-bold mb-1 text-[#032B22]">
+              <label className="block text-sm font-bold mb-1 text-forest">
                 الاسم الكامل *
               </label>
               <Input
@@ -201,7 +190,7 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
             </div>
           )}
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
+            <label className="block text-sm font-bold mb-1 text-forest">
               كود الطالب *
             </label>
             <Input
@@ -214,8 +203,8 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
-              كلمة المرور * (٦ أحرف على الأقل)
+            <label className="block text-sm font-bold mb-1 text-forest">
+              كلمة المرور *
             </label>
             <Input
               type="password"
@@ -230,20 +219,16 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-[#032B22] hover:bg-[#063D30] text-white font-bold rounded-md"
+            className="w-full h-12 bg-forest hover:bg-brand-green text-paper font-bold rounded-md"
           >
-            {loading
-              ? "جارٍ المعالجة..."
-              : mode === "login"
-              ? "دخول"
-              : "تسجيل"}
+            {loading ? "جارٍ المعالجة..." : mode === "login" ? "دخول" : "تسجيل"}
           </Button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-[#DED6C5]">
+        <div className="mt-6 pt-4 border-t border-border-warm">
           <p className="text-xs text-center text-[#5A6B66]">
-            هل أنت من هيئة التحرير؟{" "}
-            <a href="/admin" className="text-[#C9A04A] font-bold hover:underline">
+            هيئة التحرير؟{" "}
+            <a href="/admin" className="text-gold font-bold hover:underline">
               ادخل من هنا
             </a>
           </p>
@@ -253,7 +238,7 @@ function AuthScreen({ onAuth }: { onAuth: () => void }) {
   );
 }
 
-// ─── Article Submit Modal ───────────────────────────────────────────────
+// ─── Submit Article Modal ───────────────────────────────────────────────
 
 function SubmitArticleModal({
   onClose,
@@ -303,16 +288,14 @@ function SubmitArticleModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="border-b px-6 py-4 flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-xl font-bold text-[#032B22]">
-            إرسال مقال جديد
-          </h2>
+          <h2 className="text-xl font-bold text-forest">إرسال مقال جديد</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <XCircle className="h-5 w-5" />
           </Button>
         </div>
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
+            <label className="block text-sm font-bold mb-1 text-forest">
               العنوان *
             </label>
             <Input
@@ -323,19 +306,19 @@ function SubmitArticleModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
+            <label className="block text-sm font-bold mb-1 text-forest">
               مقتطف قصير
             </label>
             <textarea
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
-              placeholder="ملخص قصير لمقالك..."
+              placeholder="ملخص قصير..."
               rows={2}
               className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
+            <label className="block text-sm font-bold mb-1 text-forest">
               نص المقال
             </label>
             <textarea
@@ -347,7 +330,7 @@ function SubmitArticleModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-bold mb-1 text-[#032B22]">
+            <label className="block text-sm font-bold mb-1 text-forest">
               القسم
             </label>
             <select
@@ -356,25 +339,20 @@ function SubmitArticleModal({
               className="w-full h-11 px-3 rounded-md border border-input bg-background text-sm"
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
-          <div className="bg-[#EFE9DA] rounded-md p-3 text-xs text-[#5A6B66]">
-            ℹ️ مقالك سيُرسل كهيئة تحرير للمراجعة. لن يُنشر إلا بعد موافقة
-            المحررين.
+          <div className="bg-paper-warm rounded-md p-3 text-xs text-[#5A6B66]">
+            ℹ️ مقالك سيُرسل لهيئة التحرير للمراجعة. لن يُنشر إلا بعد الموافقة.
           </div>
         </div>
         <div className="border-t px-6 py-4 flex justify-end gap-2 sticky bottom-0 bg-white">
-          <Button variant="ghost" onClick={onClose}>
-            إلغاء
-          </Button>
+          <Button variant="ghost" onClick={onClose}>إلغاء</Button>
           <Button
             onClick={save}
             disabled={saving}
-            className="bg-[#C9A04A] hover:bg-[#A07B2E] text-white font-bold"
+            className="bg-gold hover:bg-[#A07B2E] text-white font-bold"
           >
             <Send className="h-4 w-4 ml-1" />
             {saving ? "جارٍ الإرسال..." : "إرسال للمراجعة"}
@@ -385,7 +363,7 @@ function SubmitArticleModal({
   );
 }
 
-// ─── Student Dashboard ──────────────────────────────────────────────────
+// ─── Main Student Page (Magazine-style) ─────────────────────────────────
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: "قيد المراجعة",
@@ -395,12 +373,12 @@ const STATUS_LABELS: Record<string, string> = {
   PUBLISHED: "منشور",
 };
 
-const STATUS_ICONS: Record<string, React.ReactNode> = {
-  DRAFT: <Clock className="h-4 w-4 text-amber-600" />,
-  PENDING_REVIEW: <Clock className="h-4 w-4 text-amber-600" />,
-  APPROVED: <CheckCircle2 className="h-4 w-4 text-blue-600" />,
-  REJECTED: <XCircle className="h-4 w-4 text-red-600" />,
-  PUBLISHED: <CheckCircle2 className="h-4 w-4 text-green-600" />,
+const STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-amber-100 text-amber-800",
+  PENDING_REVIEW: "bg-amber-100 text-amber-800",
+  APPROVED: "bg-blue-100 text-blue-800",
+  REJECTED: "bg-red-100 text-red-800",
+  PUBLISHED: "bg-green-100 text-green-800",
 };
 
 export default function StudentPage() {
@@ -410,11 +388,11 @@ export default function StudentPage() {
   const [mySubmissions, setMySubmissions] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubmit, setShowSubmit] = useState(false);
-  const [view, setView] = useState<"published" | "mine">("published");
+  const [view, setView] = useState<"magazine" | "mine">("magazine");
 
   useEffect(() => {
     const session = getStudentSession();
-    if (session) setStudent(session);
+    if (session) setStudent(session.user);
     setChecking(false);
   }, []);
 
@@ -429,8 +407,6 @@ export default function StudentPage() {
       if (e.message === "Unauthorized") {
         clearStudentSession();
         setStudent(null);
-      } else {
-        toast.error(e.message);
       }
     } finally {
       setLoading(false);
@@ -443,14 +419,17 @@ export default function StudentPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#032B22]">
-        <div className="text-white">جارٍ التحميل...</div>
+      <div className="min-h-screen flex items-center justify-center bg-forest">
+        <div className="text-paper">جارٍ التحميل...</div>
       </div>
     );
   }
 
   if (!student) {
-    return <AuthScreen onAuth={() => setStudent(getStudentSession())} />;
+    return <AuthScreen onAuth={() => {
+      const s = getStudentSession();
+      if (s) setStudent(s.user);
+    }} />;
   }
 
   const logout = () => {
@@ -458,231 +437,307 @@ export default function StudentPage() {
     setStudent(null);
   };
 
-  const AR_DATE = new Intl.DateTimeFormat("ar-EG", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const publishedCount = mySubmissions.filter((a) => a.status === "PUBLISHED").length;
+  const pendingCount = mySubmissions.filter(
+    (a) => a.status === "DRAFT" || a.status === "PENDING_REVIEW"
+  ).length;
 
   return (
-    <div className="min-h-screen bg-[#F6F2E9]">
-      {/* Header */}
-      <header className="bg-[#032B22] text-white shadow-md sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#C9A04A] to-[#A07B2E] flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold">
-                بوابة الطلاب — راية المستقبل
-              </h1>
-              <p className="text-xs text-white/60">
-                أهلاً، {student.name} ({student.studentCode})
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="text-white hover:bg-white/10">
-              <a href="/">
-                <Eye className="h-4 w-4 ml-1" />
+    <div className="min-h-screen bg-paper">
+      {/* ─── Header (matches main site) ─── */}
+      <header className="bg-forest text-paper sticky top-0 z-50 shadow-md">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <a href="/student" className="flex flex-col leading-tight">
+              <span className="text-lg font-bold">راية المستقبل</span>
+              <span className="text-[9px] tracking-[0.2em] text-gold uppercase font-medium">
+                RAYA · E-MAGAZINE
+              </span>
+            </a>
+            <div className="flex items-center gap-2">
+              <span className="hidden md:flex items-center gap-1.5 text-xs text-paper/70 bg-white/5 px-3 py-1.5 rounded-md border border-white/10">
+                <GraduationCap className="h-3.5 w-3.5 text-gold" />
+                {student.name} ({student.studentCode})
+              </span>
+              <a
+                href="/"
+                className="hidden md:flex h-9 px-3 items-center gap-1.5 rounded-md bg-white/5 text-paper/80 hover:bg-white/10 text-sm font-medium border border-white/10"
+              >
+                <Eye className="h-4 w-4" />
                 الموقع
               </a>
-            </Button>
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-white/10"
-              onClick={logout}
-            >
-              <LogOut className="h-4 w-4 ml-1" />
-              خروج
-            </Button>
+              <button
+                onClick={logout}
+                className="h-9 px-3 flex items-center gap-1.5 rounded-md bg-gold/10 text-gold hover:bg-gold/20 text-sm font-medium"
+              >
+                <LogOut className="h-4 w-4" />
+                خروج
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Welcome card */}
-        <div className="bg-[#032B22] text-white rounded-xl p-6 mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold mb-1">
-              مرحباً، {student.name}! 👋
-            </h2>
-            <p className="text-sm text-white/70">
-              شارك مقالاتك وقصصك مع مجتمع راية المستقبل
+      {/* ─── Welcome banner ─── */}
+      <section className="bg-forest text-paper relative overflow-hidden">
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <defs>
+            <pattern id="s-pat" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+              <path d="M40 0 L80 40 L40 80 L0 40 Z" fill="none" stroke="#C9A04A" strokeWidth="0.6" />
+              <circle cx="40" cy="40" r="14" fill="none" stroke="#F6F2E9" strokeWidth="0.4" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#s-pat)" />
+        </svg>
+        <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-brand-green/40 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-gold/15 blur-3xl" />
+        <div className="container mx-auto px-4 relative z-10 py-12 lg:py-16">
+          <div className="max-w-3xl">
+            <p className="text-xs text-gold tracking-[0.3em] uppercase mb-4 font-bold">
+              بوابة الطلاب
             </p>
+            <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-4">
+              مرحباً، {student.name}! 👋
+            </h1>
+            <p className="text-lg text-paper/80 mb-6 leading-relaxed">
+              تصفّح أحدث مقالات المجلة وشارك بمقالاتك وقصصك مع مجتمع راية المستقبل
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => setShowSubmit(true)}
+                className="inline-flex items-center gap-2 bg-gold hover:bg-[#A07B2E] text-white font-bold px-5 py-2.5 rounded-md transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                شارك بمقال
+              </button>
+              <div className="flex items-center gap-4 text-sm text-paper/70">
+                <span className="flex items-center gap-1.5">
+                  <FileText className="h-4 w-4 text-gold" />
+                  {mySubmissions.length} مقال أرسلته
+                </span>
+                <span className="opacity-30">·</span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                  {publishedCount} منشور
+                </span>
+                <span className="opacity-30">·</span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-amber-400" />
+                  {pendingCount} قيد المراجعة
+                </span>
+              </div>
+            </div>
           </div>
-          <Button
-            onClick={() => setShowSubmit(true)}
-            className="bg-[#C9A04A] hover:bg-[#A07B2E] text-white font-bold h-11 px-5"
-          >
-            <Plus className="h-4 w-4 ml-1" />
-            إرسال مقال
-          </Button>
         </div>
+        <div className="absolute bottom-0 inset-x-0 z-10">
+          <svg viewBox="0 0 1440 60" className="w-full h-[40px]" preserveAspectRatio="none" aria-hidden>
+            <path d="M0 40 C 240 10 480 10 720 30 C 960 50 1200 50 1440 20 L 1440 60 L 0 60 Z" fill="var(--color-paper)" />
+          </svg>
+        </div>
+      </section>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg border border-[#DED6C5] p-4 text-center">
-            <div className="text-3xl font-bold text-[#032B22]">
-              {mySubmissions.length}
-            </div>
-            <div className="text-xs text-[#5A6B66] mt-1">مقالاتي المُرسلة</div>
-          </div>
-          <div className="bg-white rounded-lg border border-[#DED6C5] p-4 text-center">
-            <div className="text-3xl font-bold text-green-600">
-              {mySubmissions.filter((a) => a.status === "PUBLISHED").length}
-            </div>
-            <div className="text-xs text-[#5A6B66] mt-1">منشورة</div>
-          </div>
-          <div className="bg-white rounded-lg border border-[#DED6C5] p-4 text-center">
-            <div className="text-3xl font-bold text-amber-600">
-              {
-                mySubmissions.filter(
-                  (a) => a.status === "DRAFT" || a.status === "PENDING_REVIEW"
-                ).length
+      {/* ─── Tab switcher ─── */}
+      <section className="bg-paper py-6 border-b border-border-warm">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-1 p-1 bg-white rounded-lg border border-border-warm max-w-md">
+            <button
+              onClick={() => setView("magazine")}
+              className={
+                "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+                (view === "magazine"
+                  ? "bg-forest text-paper"
+                  : "text-[#5A6B66] hover:bg-paper-warm")
               }
-            </div>
-            <div className="text-xs text-[#5A6B66] mt-1">قيد المراجعة</div>
+            >
+              <Eye className="h-4 w-4" />
+              تصفّح المجلة
+            </button>
+            <button
+              onClick={() => setView("mine")}
+              className={
+                "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+                (view === "mine"
+                  ? "bg-forest text-paper"
+                  : "text-[#5A6B66] hover:bg-paper-warm")
+              }
+            >
+              <FileText className="h-4 w-4" />
+              مقالاتي ({mySubmissions.length})
+            </button>
           </div>
         </div>
+      </section>
 
-        {/* Tab switcher */}
-        <div className="flex gap-1 p-1 bg-white rounded-lg border border-[#DED6C5] mb-6 max-w-md">
-          <button
-            onClick={() => setView("published")}
-            className={
-              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
-              (view === "published"
-                ? "bg-[#032B22] text-white"
-                : "text-[#5A6B66] hover:bg-[#EFE9DA]")
-            }
-          >
-            <Eye className="h-4 w-4" />
-            المقالات المنشورة
-          </button>
-          <button
-            onClick={() => setView("mine")}
-            className={
-              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
-              (view === "mine"
-                ? "bg-[#032B22] text-white"
-                : "text-[#5A6B66] hover:bg-[#EFE9DA]")
-            }
-          >
-            <FileText className="h-4 w-4" />
-            مقالاتي ({mySubmissions.length})
-          </button>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="text-center text-[#5A6B66] py-12">جارٍ التحميل...</div>
-        ) : view === "published" ? (
-          /* Published articles grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {published.length === 0 ? (
-              <div className="col-span-full text-center py-12 text-[#5A6B66]">
-                لا توجد مقالات منشورة بعد
-              </div>
-            ) : (
-              published.slice(0, 12).map((a) => (
-                <article
-                  key={a.id}
-                  className="bg-white rounded-md overflow-hidden border border-[#DED6C5] hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative h-40 overflow-hidden bg-[#032B22]">
-                    {a.coverImage && (
-                      <img
-                        src={a.coverImage}
-                        alt={a.title}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    <div className="absolute top-3 right-3 bg-[#C9A04A] text-white text-[11px] font-bold px-2 py-0.5 rounded">
-                      {a.category}
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="text-[11px] text-[#5A6B66] mb-1.5">
-                      {a.publishedAt
-                        ? AR_DATE.format(new Date(a.publishedAt))
-                        : AR_DATE.format(new Date(a.createdAt))}
-                    </div>
-                    <h3 className="text-base font-bold text-[#032B22] leading-snug mb-1.5 line-clamp-2">
-                      {a.title}
-                    </h3>
-                    <p className="text-[13px] text-[#5A6B66] leading-relaxed line-clamp-2">
-                      {a.excerpt || ""}
-                    </p>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        ) : (
-          /* My submissions */
-          <div className="bg-white rounded-xl border border-[#DED6C5] overflow-hidden">
-            {mySubmissions.length === 0 ? (
-              <div className="p-12 text-center">
-                <FileText className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
-                <p className="text-[#5A6B66] mb-4">
-                  لم ترسل أي مقال بعد
-                </p>
-                <Button
+      {/* ─── Main content ─── */}
+      <main className="bg-paper py-12">
+        <div className="container mx-auto px-4">
+          {loading ? (
+            <div className="text-center text-[#5A6B66] py-12">جارٍ التحميل...</div>
+          ) : view === "magazine" ? (
+            /* ─── Magazine view (same as public site) ─── */
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-forest">
+                  أحدث المقالات
+                </h2>
+                <button
                   onClick={() => setShowSubmit(true)}
-                  className="bg-[#C9A04A] hover:bg-[#A07B2E] text-white font-bold"
+                  className="text-sm text-gold hover:underline flex items-center gap-1 font-medium"
                 >
-                  <Plus className="h-4 w-4 ml-1" />
-                  أرسل أول مقال
-                </Button>
+                  <Plus className="h-3.5 w-3.5" />
+                  شارك بمقال
+                </button>
               </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-[#EFE9DA] text-[#032B22]">
-                  <tr>
-                    <th className="text-right p-3 font-bold">العنوان</th>
-                    <th className="text-right p-3 font-bold">القسم</th>
-                    <th className="text-right p-3 font-bold">الحالة</th>
-                    <th className="text-right p-3 font-bold whitespace-nowrap">التاريخ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mySubmissions.map((a) => (
-                    <tr
+              {published.length === 0 ? (
+                <div className="text-center py-12 text-[#5A6B66]">
+                  لا توجد مقالات منشورة بعد
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {published.map((a) => (
+                    <article
                       key={a.id}
-                      className="border-t border-[#DED6C5] hover:bg-[#F6F2E9]/50"
+                      className="group bg-white rounded-md overflow-hidden border border-border-warm hover:shadow-lg transition-shadow"
                     >
-                      <td className="p-3">
-                        <div className="font-bold text-[#032B22] line-clamp-1">
-                          {a.title}
-                        </div>
-                        {a.excerpt && (
-                          <div className="text-xs text-[#5A6B66] line-clamp-1 mt-0.5">
-                            {a.excerpt}
-                          </div>
+                      <div className="relative h-40 overflow-hidden bg-forest">
+                        {a.coverImage && (
+                          <img
+                            src={a.coverImage}
+                            alt={a.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
                         )}
-                      </td>
-                      <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
-                        {a.category}
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                          {STATUS_ICONS[a.status]}
-                          {STATUS_LABELS[a.status] || a.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
-                        {AR_DATE.format(new Date(a.createdAt))}
-                      </td>
-                    </tr>
+                        <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
+                          {a.category}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="text-[11px] text-[#5A6B66] mb-1.5 flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3" />
+                          {a.publishedAt
+                            ? AR_DATE.format(new Date(a.publishedAt))
+                            : AR_DATE.format(new Date(a.createdAt))}
+                        </div>
+                        <h3 className="text-base font-bold text-forest leading-snug mb-1.5 group-hover:text-gold transition-colors line-clamp-2">
+                          {a.title}
+                        </h3>
+                        <p className="text-[13px] text-[#5A6B66] leading-relaxed line-clamp-2">
+                          {a.excerpt || ""}
+                        </p>
+                      </div>
+                    </article>
                   ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
+                </div>
+              )}
+            </>
+          ) : (
+            /* ─── My submissions view ─── */
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-forest">مقالاتي</h2>
+                <button
+                  onClick={() => setShowSubmit(true)}
+                  className="inline-flex items-center gap-1.5 bg-gold hover:bg-[#A07B2E] text-white text-sm font-bold px-4 py-2 rounded-md transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  مقال جديد
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-white rounded-lg border border-border-warm p-4 text-center">
+                  <div className="text-3xl font-bold text-forest">
+                    {mySubmissions.length}
+                  </div>
+                  <div className="text-xs text-[#5A6B66] mt-1">إجمالي مقالاتي</div>
+                </div>
+                <div className="bg-white rounded-lg border border-border-warm p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">
+                    {publishedCount}
+                  </div>
+                  <div className="text-xs text-[#5A6B66] mt-1">منشورة</div>
+                </div>
+                <div className="bg-white rounded-lg border border-border-warm p-4 text-center">
+                  <div className="text-3xl font-bold text-amber-600">
+                    {pendingCount}
+                  </div>
+                  <div className="text-xs text-[#5A6B66] mt-1">قيد المراجعة</div>
+                </div>
+              </div>
+
+              {mySubmissions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-border-warm p-12 text-center">
+                  <FileText className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+                  <p className="text-[#5A6B66] mb-4">لم ترسل أي مقال بعد</p>
+                  <button
+                    onClick={() => setShowSubmit(true)}
+                    className="inline-flex items-center gap-1.5 bg-gold hover:bg-[#A07B2E] text-white text-sm font-bold px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    أرسل أول مقال
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-border-warm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-paper-warm text-forest">
+                      <tr>
+                        <th className="text-right p-3 font-bold">العنوان</th>
+                        <th className="text-right p-3 font-bold">القسم</th>
+                        <th className="text-right p-3 font-bold">الحالة</th>
+                        <th className="text-right p-3 font-bold whitespace-nowrap">التاريخ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mySubmissions.map((a) => (
+                        <tr
+                          key={a.id}
+                          className="border-t border-border-warm hover:bg-paper/50"
+                        >
+                          <td className="p-3">
+                            <div className="font-bold text-forest line-clamp-1">
+                              {a.title}
+                            </div>
+                            {a.excerpt && (
+                              <div className="text-xs text-[#5A6B66] line-clamp-1 mt-0.5">
+                                {a.excerpt}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+                            {a.category}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={
+                                "inline-block px-2 py-0.5 rounded-full text-xs font-bold " +
+                                (STATUS_COLORS[a.status] || "bg-slate-100 text-slate-700")
+                              }
+                            >
+                              {STATUS_LABELS[a.status] || a.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-xs text-[#5A6B66] whitespace-nowrap">
+                            {AR_DATE.format(new Date(a.createdAt))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </main>
+
+      {/* ─── Footer ─── */}
+      <footer className="bg-forest text-paper py-6 mt-auto">
+        <div className="container mx-auto px-4 text-center text-xs text-paper/55">
+          © راية المستقبل — جميع الحقوق محفوظة.
+        </div>
+      </footer>
 
       {showSubmit && (
         <SubmitArticleModal
