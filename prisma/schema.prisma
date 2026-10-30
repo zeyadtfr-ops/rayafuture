@@ -141,3 +141,33 @@ model Newsletter {
 
   @@index([status])
 }
+
+// ─── Saved Articles (Student Bookmarks) ─────────────────────────────────
+// Stores articles that students have bookmarked for later reading.
+
+model SavedArticle {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, articleId])
+  @@index([userId])
+}
+
+// ─── Notifications ──────────────────────────────────────────────────────
+// Stores notifications for students (article published, rejected, etc.)
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")  // "info" | "success" | "warning" | "article_published" | "article_rejected"
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}

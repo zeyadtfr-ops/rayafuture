@@ -75,6 +75,7 @@ export async function PUT(
 
   // status transition handling
   if (body.status && ALLOWED_STATUSES.has(body.status)) {
+    const oldStatus = existing.status;
     data.status = body.status;
     if (body.status === "PUBLISHED" && !existing.publishedAt) {
       data.publishedAt = new Date();
@@ -82,6 +83,43 @@ export async function PUT(
     }
     if (body.status === "APPROVED") {
       data.reviewedAt = new Date();
+    }
+
+    // ─── Auto-create notification for student when their article status changes ───
+    if (existing.authorId && oldStatus !== body.status) {
+      let notifTitle = "";
+      let notifMessage = "";
+      let notifType = "info";
+
+      if (body.status === "PUBLISHED") {
+        notifTitle = "تم نشر مقالك! 🎉";
+        notifMessage = `تم نشر مقالك "${existing.title}" في المجلة.`;
+        notifType = "article_published";
+      } else if (body.status === "REJECTED") {
+        notifTitle = "تم رفض مقالك";
+        notifMessage = `لم يتم قبول مقالك "${existing.title}" للنشر. يمكنك تعديله وإعادة الإرسال.`;
+        notifType = "article_rejected";
+      } else if (body.status === "APPROVED") {
+        notifTitle = "تم اعتماد مقالك ✅";
+        notifMessage = `تم اعتماد مقالك "${existing.title}" وسيتم نشره قريباً.`;
+        notifType = "success";
+      } else if (body.status === "PENDING_REVIEW") {
+        notifTitle = "مقالك قيد المراجعة";
+        notifMessage = `تم استلام مقالك "${existing.title}" وهو قيد المراجعة من هيئة التحرير.`;
+        notifType = "info";
+      }
+
+      if (notifTitle) {
+        await db.notification.create({
+          data: {
+            userId: existing.authorId,
+            title: notifTitle,
+            message: notifMessage,
+            type: notifType,
+            link: `/student`,
+          },
+        });
+      }
     }
   }
 

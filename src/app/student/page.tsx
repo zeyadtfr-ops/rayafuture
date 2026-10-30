@@ -15,6 +15,9 @@ import {
   LogIn,
   Calendar,
   GraduationCap,
+  Bookmark,
+  Bell,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -388,7 +391,12 @@ export default function StudentPage() {
   const [mySubmissions, setMySubmissions] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubmit, setShowSubmit] = useState(false);
-  const [view, setView] = useState<"magazine" | "mine">("magazine");
+  const [view, setView] = useState<"magazine" | "mine" | "saved">("magazine");
+  const [savedArticles, setSavedArticles] = useState<Article[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   useEffect(() => {
     const session = getStudentSession();
@@ -413,9 +421,62 @@ export default function StudentPage() {
     }
   }, []);
 
+  // Load saved articles
+  const loadSaved = useCallback(async () => {
+    if (!getStudentSession()) return;
+    try {
+      const data = await studentApi("/api/student/saved");
+      setSavedArticles(data.items || []);
+      setSavedIds(new Set((data.items || []).map((a: any) => a.id)));
+    } catch { /* ignore */ }
+  }, []);
+
+  // Load notifications
+  const loadNotifs = useCallback(async () => {
+    if (!getStudentSession()) return;
+    try {
+      const data = await studentApi("/api/student/notifications");
+      setNotifications(data.items || []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
-    if (student) loadData();
-  }, [student, loadData]);
+    if (student) {
+      loadData();
+      loadSaved();
+      loadNotifs();
+    }
+  }, [student, loadData, loadSaved, loadNotifs]);
+
+  // Toggle save article
+  const toggleSave = async (articleId: string) => {
+    const isSaved = savedIds.has(articleId);
+    try {
+      if (isSaved) {
+        await studentApi("/api/student/saved", { method: "DELETE", body: JSON.stringify({ articleId }) });
+        setSavedIds((prev) => { const n = new Set(prev); n.delete(articleId); return n; });
+        setSavedArticles((prev) => prev.filter((a) => a.id !== articleId));
+        toast.success("تمت الإزالة من المحفوظات");
+      } else {
+        await studentApi("/api/student/saved", { method: "POST", body: JSON.stringify({ articleId }) });
+        setSavedIds((prev) => new Set(prev).add(articleId));
+        toast.success("تم حفظ المقال");
+        loadSaved();
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllRead = async () => {
+    try {
+      await studentApi("/api/student/notifications", { method: "POST", body: JSON.stringify({ markAllRead: true }) });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch { /* ignore */ }
+  };
 
   if (checking) {
     return (
@@ -466,6 +527,63 @@ export default function StudentPage() {
                 <Eye className="h-4 w-4" />
                 الموقع
               </a>
+
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => { setShowNotifs((s) => !s); if (!showNotifs && unreadCount > 0) markAllRead(); }}
+                  className="relative h-9 w-9 flex items-center justify-center rounded-md bg-white/5 text-paper/80 hover:bg-white/10 border border-white/10"
+                >
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gold text-white text-[10px] font-bold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifs && (
+                  <div className="absolute left-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-white rounded-xl shadow-2xl border border-border-warm z-50">
+                    <div className="p-3 border-b border-border-warm flex items-center justify-between">
+                      <span className="font-bold text-forest text-sm">الإشعارات</span>
+                      {notifications.length > 0 && (
+                        <button onClick={markAllRead} className="text-xs text-gold hover:underline">
+                          تعليم الكل كمقروء
+                        </button>
+                      )}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-[#5A6B66] text-sm">
+                        <Bell className="h-8 w-8 text-[#5A6B66]/30 mx-auto mb-2" />
+                        لا توجد إشعارات
+                      </div>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => (
+                        <div
+                          key={n.id}
+                          className={"p-3 border-b border-border-warm last:border-0 " + (!n.isRead ? "bg-gold/5" : "")}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={
+                              "flex-shrink-0 w-2 h-2 rounded-full mt-1.5 " +
+                              (n.type === "article_published" ? "bg-green-500" :
+                               n.type === "article_rejected" ? "bg-red-500" :
+                               n.type === "success" ? "bg-blue-500" : "bg-gold")
+                            } />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-forest line-clamp-1">{n.title}</p>
+                              <p className="text-xs text-[#5A6B66] line-clamp-2 mt-0.5">{n.message}</p>
+                              <p className="text-[10px] text-[#5A6B66]/60 mt-1">
+                                {new Intl.DateTimeFormat("ar-EG", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(n.createdAt))}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={logout}
                 className="h-9 px-3 flex items-center gap-1.5 rounded-md bg-gold/10 text-gold hover:bg-gold/20 text-sm font-medium"
@@ -539,7 +657,7 @@ export default function StudentPage() {
       {/* ─── Tab switcher ─── */}
       <section className="bg-paper py-6 border-b border-border-warm">
         <div className="container mx-auto px-4">
-          <div className="flex gap-1 p-1 bg-white rounded-lg border border-border-warm max-w-md">
+          <div className="flex gap-1 p-1 bg-white rounded-lg border border-border-warm max-w-2xl">
             <button
               onClick={() => setView("magazine")}
               className={
@@ -551,6 +669,18 @@ export default function StudentPage() {
             >
               <Eye className="h-4 w-4" />
               تصفّح المجلة
+            </button>
+            <button
+              onClick={() => setView("saved")}
+              className={
+                "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+                (view === "saved"
+                  ? "bg-forest text-paper"
+                  : "text-[#5A6B66] hover:bg-paper-warm")
+              }
+            >
+              <Bookmark className="h-4 w-4" />
+              محفوظات ({savedArticles.length})
             </button>
             <button
               onClick={() => setView("mine")}
@@ -626,6 +756,54 @@ export default function StudentPage() {
                         </p>
                       </div>
                     </article>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : view === "saved" ? (
+            /* ─── Saved articles view ─── */
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-forest">المحفوظات</h2>
+              </div>
+
+              {savedArticles.length === 0 ? (
+                <div className="bg-white rounded-xl border border-border-warm p-12 text-center">
+                  <Bookmark className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+                  <p className="text-[#5A6B66]">لم تحفظ أي مقال بعد</p>
+                  <p className="text-xs text-[#5A6B66]/60 mt-2">اضغط على أيقونة الحفظ بجانب أي مقال لضافته هنا</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {savedArticles.map((a) => (
+                    <div
+                      key={a.id}
+                      className="group bg-white rounded-md overflow-hidden border border-border-warm hover:shadow-lg transition-shadow relative"
+                    >
+                      <div className="relative h-40 overflow-hidden bg-forest">
+                        {a.coverImage && (
+                          <img src={a.coverImage} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        )}
+                        <div className="absolute top-3 right-3 bg-gold text-white text-[11px] font-bold px-2 py-0.5 rounded">
+                          {a.category}
+                        </div>
+                        <button
+                          onClick={() => toggleSave(a.id)}
+                          className="absolute top-3 left-3 h-8 w-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-colors"
+                          title="إزالة من المحفوظات"
+                        >
+                          <Bookmark className="h-4 w-4 text-gold fill-gold" />
+                        </button>
+                      </div>
+                      <div className="p-4">
+                        <div className="text-[11px] text-[#5A6B66] mb-1.5 flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3" />
+                          {a.publishedAt ? AR_DATE.format(new Date(a.publishedAt)) : AR_DATE.format(new Date(a.createdAt))}
+                        </div>
+                        <h3 className="text-base font-bold text-forest leading-snug mb-1.5 line-clamp-2">{a.title}</h3>
+                        <p className="text-[13px] text-[#5A6B66] line-clamp-2">{a.excerpt || ""}</p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
