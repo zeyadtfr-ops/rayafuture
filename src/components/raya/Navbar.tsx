@@ -8,6 +8,9 @@ const NAV_ITEMS = [
   { label: "الرئيسية", href: "/" },
   { label: "حياة الطالب", href: "/student-life" },
   { label: "الفعاليات", href: "/events" },
+  { label: "المعرض", href: "/gallery" },
+  { label: "الموارد", href: "/resources" },
+  { label: "خدمات", href: "/services" },
   { label: "عن المعهد", href: "/about" },
   { label: "اتصل بنا", href: "/contact" },
 ];
