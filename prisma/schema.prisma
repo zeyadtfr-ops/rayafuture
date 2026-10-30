@@ -66,13 +66,22 @@ enum ArticleStatus {
   PUBLISHED
 }
 
-// Keep the original User model for future auth integration.
+// ─── User Model ─────────────────────────────────────────────────────────
+// Supports three user types:
+//   - admin:   full access (master password or admin account)
+//   - editor:  editorial team (email + password login)
+//   - student: students who register with their student code
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      String   @default("editor")
+  id           String   @id @default(cuid())
+  email        String?  @unique  // optional for students (they use studentCode)
+  studentCode  String?  @unique  // required for students (e.g. "RAYA-2026-001")
+  name         String?
+  role         String   @default("editor")  // "admin" | "editor" | "student"
   passwordHash String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role])
+  @@index([studentCode])
 }

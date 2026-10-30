@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X, Search, ChevronDown, LogIn } from "lucide-react";
+import { Menu, X, Search, ChevronDown, LogIn, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -73,12 +73,20 @@ export default function Navbar() {
           {/* Actions */}
           <div className="flex items-center gap-2">
             <a
+              href="/student"
+              className="hidden md:flex h-9 px-3 items-center gap-1.5 rounded-md bg-white/5 text-paper/80 hover:bg-white/10 hover:text-gold transition-colors text-sm font-medium border border-white/10"
+              aria-label="بوابة الطلاب"
+            >
+              <GraduationCap className="h-4 w-4" />
+              بوابة الطلاب
+            </a>
+            <a
               href="/admin"
               className="hidden md:flex h-9 px-3 items-center gap-1.5 rounded-md bg-gold/10 text-gold hover:bg-gold/20 transition-colors text-sm font-medium"
-              aria-label="دخول"
+              aria-label="دخول الإدارة"
             >
               <LogIn className="h-4 w-4" />
-              دخول
+              الإدارة
             </a>
             <button
               className="lg:hidden text-paper p-2"
@@ -129,12 +137,20 @@ export default function Navbar() {
               </a>
             ))}
             <a
+              href="/student"
+              onClick={() => setOpen(false)}
+              className="mt-3 mx-3 mb-1 h-10 rounded-md bg-white/5 text-paper/80 text-sm font-medium flex items-center justify-center gap-1.5 border border-white/10"
+            >
+              <GraduationCap className="h-4 w-4" />
+              بوابة الطلاب
+            </a>
+            <a
               href="/admin"
               onClick={() => setOpen(false)}
-              className="mt-3 mx-3 mb-2 h-10 rounded-md bg-gold/15 text-gold text-sm font-medium flex items-center justify-center gap-1.5"
+              className="mx-3 mb-2 h-10 rounded-md bg-gold/15 text-gold text-sm font-medium flex items-center justify-center gap-1.5"
             >
               <LogIn className="h-4 w-4" />
-              دخول
+              دخول الإدارة
             </a>
           </nav>
         </div>
