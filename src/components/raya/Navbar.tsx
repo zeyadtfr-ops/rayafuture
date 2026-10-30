@@ -5,13 +5,11 @@ import { Menu, X, Search, ChevronDown, LogIn, GraduationCap } from "lucide-react
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { label: "الرئيسية", href: "#home" },
-  { label: "أخبار", href: "#news" },
-  { label: "مقالات", href: "#articles" },
-  { label: "أنشطة", href: "#activities" },
-  { label: "فعاليات", href: "#events" },
-  { label: "فرص", href: "#opportunities" },
-  { label: "من نحن", href: "#about" },
+  { label: "الرئيسية", href: "/" },
+  { label: "حياة الطالب", href: "/student-life" },
+  { label: "الفعاليات", href: "/events" },
+  { label: "عن المعهد", href: "/about" },
+  { label: "اتصل بنا", href: "/contact" },
 ];
 
 const SECTIONS = [
