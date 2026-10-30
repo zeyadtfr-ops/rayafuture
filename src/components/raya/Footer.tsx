@@ -2,15 +2,31 @@
 
 import { useState } from "react";
 import { Mail, Send, Facebook, Globe, ArrowUpRight } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const subscribe = (e: React.FormEvent) => {
+  const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    alert("تم اشتراكك بنجاح! ستصلك آخر الأخبار والإصدارات على بريدك.");
-    setEmail("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الاشتراك");
+      toast.success(data.message || "تم اشتراكك بنجاح!");
+      setEmail("");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -182,10 +198,11 @@ export default function Footer() {
                 />
                 <button
                   type="submit"
-                  className="bg-gold hover:bg-gold/90 text-white px-4 rounded-l-md transition-colors"
+                  disabled={loading}
+                  className="bg-gold hover:bg-gold/90 text-white px-4 rounded-l-md transition-colors disabled:opacity-50"
                   aria-label="اشترك"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className={"h-4 w-4 " + (loading ? "animate-pulse" : "")} />
                 </button>
               </div>
             </form>

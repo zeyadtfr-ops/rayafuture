@@ -738,6 +738,155 @@ function AddMemberModal({
   );
 }
 
+// ─── Tags Manager (inline component) ───────────────────────────────────
+
+function TagsManager() {
+  const [tags, setTags] = useState<any[]>([]);
+  const [newTag, setNewTag] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await api("/api/tags");
+      setTags(res.items || []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const add = async () => {
+    if (newTag.trim().length < 2) return;
+    try {
+      await api("/api/tags", { method: "POST", body: JSON.stringify({ name: newTag.trim() }) });
+      toast.success("تم إضافة الوسم");
+      setNewTag("");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  const del = async (id: string, name: string) => {
+    if (!confirm(`حذف الوسم "${name}"؟`)) return;
+    try {
+      await api(`/api/tags/${id}`, { method: "DELETE" });
+      toast.success("تم حذف الوسم");
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-[#D9E2DC] p-5">
+      {/* Add tag input */}
+      <div className="flex gap-2 mb-4">
+        <Input
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder="اسم الوسم الجديد..."
+          className="h-10 rounded-md flex-1"
+        />
+        <Button onClick={add} className="bg-[#0A382F] hover:bg-[#115B46] text-white h-10">
+          <Plus className="h-4 w-4 ml-1" />
+          إضافة
+        </Button>
+      </div>
+
+      {/* Tags list */}
+      {loading ? (
+        <div className="text-center text-[#5A6B66] py-4">جارٍ التحميل...</div>
+      ) : tags.length === 0 ? (
+        <p className="text-sm text-[#5A6B66] py-4 text-center">لا توجد وسوم بعد</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((t) => (
+            <span
+              key={t.id}
+              className="inline-flex items-center gap-1.5 bg-[#E9F2EB] text-[#0A382F] text-xs font-medium px-3 py-1.5 rounded-full"
+            >
+              {t.name}
+              <button
+                onClick={() => del(t.id, t.name)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <XCircle className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Add Category Modal ─────────────────────────────────────────────────
+
+function AddCategoryModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [color, setColor] = useState("#C9A04A");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    if (name.trim().length < 2) { toast.error("الاسم مطلوب"); return; }
+    setSaving(true);
+    try {
+      await api("/api/categories", {
+        method: "POST",
+        body: JSON.stringify({ name: name.trim(), description, color }),
+      });
+      toast.success("تم إضافة التصنيف");
+      onDone();
+      onClose();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div className="border-b px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-[#0A382F]">إضافة تصنيف جديد</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}><XCircle className="h-5 w-5" /></Button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">الاسم *</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: أخبار المعهد" className="h-11 rounded-md" autoFocus />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">الوصف</label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="وصف مختصر للتصنيف" className="h-11 rounded-md" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold mb-1 text-[#0A382F]">اللون</label>
+            <div className="flex items-center gap-3">
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-16 rounded border border-[#D9E2DC] cursor-pointer" />
+              <span className="text-sm text-[#5A6B66]" dir="ltr">{color}</span>
+            </div>
+          </div>
+        </div>
+        <div className="border-t px-6 py-4 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>إلغاء</Button>
+          <Button onClick={save} disabled={saving} className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold">
+            {saving ? "جارٍ الإضافة..." : "إضافة التصنيف"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────
 
 export default function AdminPage() {
@@ -752,10 +901,14 @@ export default function AdminPage() {
   const [showImport, setShowImport] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"articles" | "members">("articles");
+  const [activeTab, setActiveTab] = useState<"articles" | "members" | "categories">("articles");
   const [members, setMembers] = useState<any[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [tags, setTags] = useState<any[]>([]);
 
   useEffect(() => {
     if (hasSession()) {
@@ -811,6 +964,36 @@ export default function AdminPage() {
       loadMembers();
     }
   }, [authed, activeTab, loadMembers]);
+
+  // ─── Categories management ──────────────────────────────────────────
+  const loadCategories = useCallback(async () => {
+    setCategoriesLoading(true);
+    try {
+      const res = await api("/api/categories");
+      setCategories(res.items || []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authed && activeTab === "categories") {
+      loadCategories();
+    }
+  }, [authed, activeTab, loadCategories]);
+
+  const deleteCategory = async (id: string, name: string) => {
+    if (!confirm(`حذف التصنيف "${name}"؟`)) return;
+    try {
+      await api(`/api/categories/${id}`, { method: "DELETE" });
+      toast.success("تم حذف التصنيف");
+      loadCategories();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
 
   if (checking) {
     return (
@@ -965,7 +1148,7 @@ export default function AdminPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* ─── Tab Switcher ─── */}
-        <div className="flex gap-1 p-1 bg-white rounded-lg border border-[#D9E2DC] mb-6 max-w-md">
+        <div className="flex gap-1 p-1 bg-white rounded-lg border border-[#D9E2DC] mb-6 max-w-2xl">
           <button
             onClick={() => setActiveTab("articles")}
             className={
@@ -977,6 +1160,18 @@ export default function AdminPage() {
           >
             <FileText className="h-4 w-4" />
             المقالات
+          </button>
+          <button
+            onClick={() => setActiveTab("categories")}
+            className={
+              "flex-1 py-2.5 text-sm font-bold rounded-md transition-colors flex items-center justify-center gap-2 " +
+              (activeTab === "categories"
+                ? "bg-[#0A382F] text-white"
+                : "text-[#5A6B66] hover:bg-[#E9F2EB]")
+            }
+          >
+            <Layers className="h-4 w-4" />
+            التصنيفات
           </button>
           <button
             onClick={() => setActiveTab("members")}
@@ -1530,6 +1725,83 @@ export default function AdminPage() {
             </div>
           </>
         )}
+
+        {/* ═══════════════ CATEGORIES TAB ═══════════════ */}
+        {activeTab === "categories" && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-[#0A382F]">
+                  إدارة التصنيفات
+                </h2>
+                <p className="text-sm text-[#5A6B66] mt-1">
+                  أضف وحذف التصنيفات التي تظهر في المقالات والأقسام
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowAddCategory(true)}
+                className="bg-[#E69744] hover:bg-[#C77B2E] text-white font-bold h-10"
+              >
+                <Plus className="h-4 w-4 ml-1" />
+                إضافة تصنيف
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-[#D9E2DC] overflow-hidden">
+              {categoriesLoading ? (
+                <div className="p-12 text-center text-[#5A6B66]">جارٍ التحميل...</div>
+              ) : categories.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Layers className="h-12 w-12 text-[#5A6B66]/30 mx-auto mb-3" />
+                  <p className="text-[#5A6B66]">لا توجد تصنيفات بعد</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#E9F2EB] text-[#0A382F]">
+                      <tr>
+                        <th className="text-right p-3 font-bold">الاسم</th>
+                        <th className="text-right p-3 font-bold">الوصف</th>
+                        <th className="text-right p-3 font-bold">اللون</th>
+                        <th className="text-right p-3 font-bold">الترتيب</th>
+                        <th className="text-center p-3 font-bold">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.map((c) => (
+                        <tr key={c.id} className="border-t border-[#D9E2DC] hover:bg-[#FBF4ED]/50">
+                          <td className="p-3">
+                            <span className="font-bold text-[#0A382F]">{c.name}</span>
+                          </td>
+                          <td className="p-3 text-xs text-[#5A6B66]">{c.description || "—"}</td>
+                          <td className="p-3">
+                            <span className="inline-block w-5 h-5 rounded-full border border-[#D9E2DC]" style={{ backgroundColor: c.color }} />
+                          </td>
+                          <td className="p-3 text-xs text-[#5A6B66]">{c.sortOrder}</td>
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => deleteCategory(c.id, c.name)}
+                              className="p-1.5 rounded hover:bg-red-100 text-red-700"
+                              title="حذف"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Tags management */}
+            <div className="mt-8">
+              <h3 className="text-lg font-bold text-[#0A382F] mb-4">الوسوم (Tags)</h3>
+              <TagsManager />
+            </div>
+          </>
+        )}
       </main>
 
       {showEditor && (
@@ -1549,6 +1821,12 @@ export default function AdminPage() {
         <AddMemberModal
           onClose={() => setShowAddMember(false)}
           onDone={loadMembers}
+        />
+      )}
+      {showAddCategory && (
+        <AddCategoryModal
+          onClose={() => setShowAddCategory(false)}
+          onDone={loadCategories}
         />
       )}
     </div>

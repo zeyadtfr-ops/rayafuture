@@ -103,3 +103,41 @@ model ContactMessage {
   @@index([status])
   @@index([createdAt])
 }
+
+// ─── Categories ─────────────────────────────────────────────────────────
+// Predefined editorial categories with descriptions and colors.
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  color       String   @default("#C9A04A")  // accent color for badges
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Tags ───────────────────────────────────────────────────────────────
+// Free-form tags for articles (many-to-many concept, stored as strings
+// in Article.tags for simplicity, but managed here for autocomplete).
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+}
+
+// ─── Newsletter Subscriptions ───────────────────────────────────────────
+// Stores email subscriptions from the public footer form.
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  status    String   @default("active")  // "active" | "unsubscribed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
