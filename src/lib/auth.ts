@@ -2,10 +2,10 @@
  * Admin authentication helpers.
  *
  * Supports TWO login methods:
- *   1. Master password (env var ADMIN_PASSWORD) — no fallback default.
- *   2. Member login (email + password) — stored in the User table with bcrypt.
+ *  1. Master password (env var ADMIN_PASSWORD) — no fallback default.
+ *  2. Member login (email + password) — stored in the User table with bcrypt.
  *
- * Browser sends credentials via the `x-admin-password` header (master)
+ * The browser sends credentials via the `x-admin-password` header (master)
  * or `x-admin-email` + `x-admin-token` headers (member login).
  */
 
@@ -13,19 +13,16 @@ import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
-/**
- * Reads ADMIN_PASSWORD from env. Throws if not set — refuses to fall back
- * to any default. This eliminates the previous "raya-admin-2026" backdoor.
- */
-function getAdminPassword(): string {
-  const pw = process.env.ADMIN_PASSWORD;
-  if (!pw || pw.length < 8) {
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+export function getAdminPassword(): string {
+  if (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8) {
     throw new Error(
       "ADMIN_PASSWORD env var is required and must be at least 8 characters. " +
       "Set it in Vercel Project Settings → Environment Variables."
     );
   }
-  return pw;
+  return ADMIN_PASSWORD;
 }
 
 /** Constant-time string compare to prevent timing attacks. */
@@ -43,14 +40,24 @@ export type SessionUser =
   | { kind: "member"; id: string; email: string; name: string | null; role: string }
   | null;
 
+/**
+ * Resolves the current session user from request headers.
+ * Returns null if not authenticated.
+ */
 export async function getSessionUser(): Promise<SessionUser> {
   const h = await headers();
-  const adminPassword = getAdminPassword();
 
   // Method 1: master password (constant-time compare)
   const pw = h.get("x-admin-password");
-  if (pw && safeEqual(pw, adminPassword)) {
-    return { kind: "master", role: "admin" };
+  if (pw) {
+    try {
+      const adminPassword = getAdminPassword();
+      if (safeEqual(pw, adminPassword)) {
+        return { kind: "master", role: "admin" };
+      }
+    } catch {
+      // ADMIN_PASSWORD env var not configured.
+    }
   }
 
   // Method 2: member login (email + token = hashed password)
@@ -75,16 +82,17 @@ export async function getSessionUser(): Promise<SessionUser> {
   return null;
 }
 
+/**
+ * Returns true if the incoming request is from an authorized admin.
+ */
 export async function isAdminAuthorized(): Promise<boolean> {
-  try {
-    const session = await getSessionUser();
-    return session !== null;
-  } catch {
-    // ADMIN_PASSWORD env var not configured → not authorized.
-    return false;
-  }
+  const session = await getSessionUser();
+  return session !== null;
 }
 
+/**
+ * Throws a 401 response when the caller is not authorized.
+ */
 export async function requireAdmin(): Promise<void> {
   const ok = await isAdminAuthorized();
   if (!ok) {
