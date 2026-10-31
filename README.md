@@ -146,8 +146,7 @@ raya-magazine/
 DATABASE_URL="file:./db/custom.db"
 # كلمة مرور المشرف العام (غيّرها في الإنتاج!)
 ADMIN_PASSWORD="<set-strong-password-in-Vercel-env-vars>"
-
-# (اختياري) Facebook Graph API — للمزامنة التلقائية المستقبلية للمزامنة التلقائية المستقبلية
+# (اختياري) Facebook Graph API — للمزامنة التلقائية المستقبلية
 # FB_APP_ID=""
 # FB_APP_SECRET=""
 # FB_PAGE_ID="RayaEdu2018"
@@ -159,9 +158,9 @@ ADMIN_PASSWORD="<set-strong-password-in-Vercel-env-vars>"
 ## 📖 دليل الاستخدام
 
 ### تسجيل دخول المشرف العام
-1. اذهب إلى `/admin`
+ 1. اذهب إلى `/admin`
 2. أدخل كلمة المرور (الموجودة في Vercel Environment Variables)
-   3. اضغط "دخول"
+3. اضغط "دخول"
 
 ### إضافة عضو جديد
 1. سجّل دخول كمشرف عام
