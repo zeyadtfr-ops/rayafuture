@@ -1,69 +1,74 @@
-// Prisma schema for Raya Future Magazine
-// Learn more: https://pris.ly/d/prisma-schema
+// Prisma schema for Raya Future Magazine — PostgreSQL (Supabase)
+// The models below are mapped (@@map / @map) onto the existing Supabase
+// tables and columns, so the app code keeps its original field names
+// (title, excerpt, body, ...) while data lives in the bilingual Supabase
+// schema (title_ar, summary_ar, content_ar, ...).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ─── Editorial Article Model ───────────────────────────────────────────────
-// Stores magazine articles with full editorial metadata, source tracking,
-// and review/publish lifecycle. Used by the /admin dashboard and consumed
-// by the public magazine's NewsSection component.
+// Maps to the Supabase `articles` table. Arabic columns are the primary
+// content source; English columns keep their DB defaults.
 
 model Article {
   // ── Identity & storage ────────────────────────────────────────────────
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // ── Editorial content (Arabic) ────────────────────────────────────────
-  title        String
-  excerpt      String?
-  body         String?
-  coverImage   String?
-  category     String   @default("أخبار المؤسسة")
-  tags         String?  // comma-separated
+  title       String  @map("title_ar")
+  excerpt     String? @map("summary_ar")
+  body        String? @map("content_ar")
+  coverImage  String? @map("cover_path")
+  category    String  @default("أخبار المؤسسة")
+  tags        String? // comma-separated
 
   // ── Editorial lifecycle ───────────────────────────────────────────────
   // draft → pending_review → approved → published
-  // rejected records are kept for audit but never displayed publicly.
-  status       ArticleStatus @default(DRAFT)
+  // PG enum type: article_status (labels match these values exactly)
+  status article_status @default(DRAFT)
 
   // ── Source provenance (for imported content) ──────────────────────────
-  // Tracks where the article came from to support idempotent imports.
-  sourcePlatform  String? // "facebook" | "website" | "manual" | "import"
-  sourceId        String? // stable ID from source (e.g. FB post ID)
-  sourceUrl       String?
-  originalText   String?  // untouched source text (preserved for audit)
-  originalPubAt  DateTime? // original publication date at source
-  importedAt     DateTime?
+  sourcePlatform String?   @map("source_platform") // "facebook" | "website" | "manual" | "import" | "student"
+  sourceId       String?   @map("source_id") // stable ID from source (e.g. FB post ID)
+  sourceUrl      String?   @map("source_url")
+  originalText   String?   @map("original_text") // untouched source text
+  originalPubAt  DateTime? @map("original_pub_at")
+  importedAt     DateTime? @map("imported_at")
 
   // ── Editorial tracking ────────────────────────────────────────────────
-  authorId      String?
-  reviewerId    String?
-  reviewedAt    DateTime?
-  publishedAt   DateTime?
+  authorId    String?   @map("author_id")
+  reviewerId  String?   @map("reviewer_id") @db.Uuid
+  reviewedAt  DateTime? @map("reviewed_at")
+  publishedAt DateTime? @map("published_at")
 
   // ── Duplicate detection (optional fingerprint of source content) ──────
-  contentHash   String?
+  contentHash String? @map("content_hash")
 
   @@index([status, publishedAt])
   @@index([sourcePlatform, sourceId])
   @@index([category])
+  @@map("articles")
 }
 
-enum ArticleStatus {
+// Mirrors the Postgres enum type `article_status` in Supabase.
+// Labels were aligned to the app's uppercase convention.
+enum article_status {
   DRAFT
   PENDING_REVIEW
   APPROVED
   REJECTED
   PUBLISHED
+  ARCHIVED
 }
 
 // ─── User Model ─────────────────────────────────────────────────────────
@@ -73,119 +78,126 @@ enum ArticleStatus {
 //   - student: students who register with their student code
 
 model User {
-  id           String   @id @default(cuid())
-  email        String?  @unique  // optional for students (they use studentCode)
-  studentCode  String?  @unique  // required for students (e.g. "RAYA-2026-001")
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String?  @unique // optional for students (they use studentCode)
+  studentCode  String?  @unique @map("student_code") // required for students (e.g. "RAYA-2026-001")
   name         String?
-  role         String   @default("editor")  // "admin" | "editor" | "student"
-  passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         String   @default("editor") // "admin" | "editor" | "student"
+  passwordHash String?  @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@index([role])
-  @@index([studentCode])
+  @@map("users")
 }
 
 // ─── Contact Messages ───────────────────────────────────────────────────
 // Stores messages submitted through the public contact form.
 
 model ContactMessage {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   email     String
   subject   String
-  message   String
+  message   String   @map("body")
   phone     String?
-  status    String   @default("new")  // "new" | "read" | "replied" | "archived"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    String   @default("new") // "new" | "read" | "replied" | "archived"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([status])
-  @@index([createdAt])
+  @@map("contact_messages")
 }
 
 // ─── Categories ─────────────────────────────────────────────────────────
 // Predefined editorial categories with descriptions and colors.
 
 model Category {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @map("name_ar")
   slug        String   @unique
   description String?
-  color       String   @default("#C9A04A")  // accent color for badges
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  color       String   @default("#C9A04A") // accent color for badges
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("categories")
 }
 
 // ─── Tags ───────────────────────────────────────────────────────────────
-// Free-form tags for articles (many-to-many concept, stored as strings
-// in Article.tags for simplicity, but managed here for autocomplete).
+// Free-form tags for articles (stored as strings on Article.tags for
+// simplicity, but managed here for autocomplete).
 
 model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @map("name_ar")
   slug      String   @unique
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tags")
 }
 
 // ─── Newsletter Subscriptions ───────────────────────────────────────────
 // Stores email subscriptions from the public footer form.
 
 model Newsletter {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String   @unique
-  status    String   @default("active")  // "active" | "unsubscribed"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    String   @default("active") // "active" | "unsubscribed"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([status])
+  @@map("newsletters")
 }
 
 // ─── Saved Articles (Student Bookmarks) ─────────────────────────────────
 // Stores articles that students have bookmarked for later reading.
 
 model SavedArticle {
-  id        String   @id @default(cuid())
-  userId    String
-  articleId String
-  createdAt DateTime @default(now())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  articleId String   @map("article_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@unique([userId, articleId])
   @@index([userId])
+  @@map("saved_articles")
 }
 
 // ─── Notifications ──────────────────────────────────────────────────────
 // Stores notifications for students (article published, rejected, etc.)
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
   title     String
-  message   String
-  type      String   @default("info")  // "info" | "success" | "warning" | "article_published" | "article_rejected"
-  isRead    Boolean  @default(false)
+  message   String   @map("body")
+  type      String   @default("info") @map("notification_type") // "info" | "success" | "warning" | "article_published" | "article_rejected"
+  isRead    Boolean  @default(false) @map("is_read")
   link      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId, isRead])
   @@index([createdAt])
+  @@map("notifications")
 }
 
 // ─── Audit Logs ─────────────────────────────────────────────────────────
 // Tracks all administrative actions for security and accountability.
 
 model AuditLog {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   action    String   // "create" | "update" | "delete" | "publish" | "import" | "login" | "bulk"
-  entity    String   // "article" | "user" | "category" | "tag" | "contact" | "newsletter"
-  entityId  String?
-  actorId   String?  // user ID of the actor (null for master password)
-  actorName String?  // display name or "master"
-  details   String?  // JSON string with additional context
-  createdAt DateTime @default(now())
+  entity    String   @map("target_type") // "article" | "user" | "category" | "tag" | "contact" | "newsletter"
+  entityId  String?  @map("target_id") @db.Uuid
+  actorId   String?  @map("actor_id") @db.Uuid // user ID of the actor (null for master password)
+  actorName String?  @map("actor_name") // display name or "master"
+  details   String?  // additional context
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([entity, action])
   @@index([actorId])
   @@index([createdAt])
+  @@map("audit_logs")
 }
