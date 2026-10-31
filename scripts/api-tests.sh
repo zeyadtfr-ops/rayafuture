@@ -4,7 +4,7 @@
 
 set -e
 BASE="http://localhost:3000"
-PW="raya-admin-2026"
+PW="${ADMIN_PASSWORD:?Set ADMIN_PASSWORD env var before running tests. Example: ADMIN_PASSWORD=\"your_password\" bash scripts/api-tests.sh}"
 PASS=0
 FAIL=0
 RESULTS=()
