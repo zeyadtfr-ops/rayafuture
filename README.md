@@ -144,11 +144,10 @@ raya-magazine/
 ```env
 # قاعدة البيانات (SQLite)
 DATABASE_URL="file:./db/custom.db"
-
 # كلمة مرور المشرف العام (غيّرها في الإنتاج!)
-ADMIN_PASSWORD="raya-admin-2026"
+ADMIN_PASSWORD="<set-strong-password-in-Vercel-env-vars>"
 
-# (اختياري) Facebook Graph API — للمزامنة التلقائية المستقبلية
+# (اختياري) Facebook Graph API — للمزامنة التلقائية المستقبلية للمزامنة التلقائية المستقبلية
 # FB_APP_ID=""
 # FB_APP_SECRET=""
 # FB_PAGE_ID="RayaEdu2018"
@@ -161,8 +160,8 @@ ADMIN_PASSWORD="raya-admin-2026"
 
 ### تسجيل دخول المشرف العام
 1. اذهب إلى `/admin`
-2. أدخل كلمة المرور: `raya-admin-2026`
-3. اضغط "دخول"
+2. أدخل كلمة المرور (الموجودة في Vercel Environment Variables)
+   3. اضغط "دخول"
 
 ### إضافة عضو جديد
 1. سجّل دخول كمشرف عام
