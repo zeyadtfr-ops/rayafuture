@@ -77,5 +77,3 @@
     "typescript": "^5"
   }
 }
-
-- zod, @hookform/resolvers (kept for future use)
