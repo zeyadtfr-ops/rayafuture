@@ -34,9 +34,14 @@ export async function logAction(params: {
 /**
  * Resolves actor info from the current session for audit logging.
  */
-export async function getActorInfo(session: any): Promise<{ id?: string; name: string }> {
-  if (session?.kind === "member" && session.user) {
-    return { id: session.id, name: session.name || session.email };
+export async function getActorInfo(
+  session: SessionUser | null
+): Promise<{ id?: string; name: string }> {
+  if (session?.kind === "member") {
+    return {
+      id: session.id,
+      name: session.name || session.email || "member",
+    };
   }
   return { name: "master" };
 }
