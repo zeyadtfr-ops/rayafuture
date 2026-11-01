@@ -77,3 +77,26 @@
     "typescript": "^5"
   }
 }
+chore(deps): remove 19 unused packages
+
+Removed:
+- @dnd-kit/* (3 packages)
+- @mdxeditor/editor
+- @reactuses/core
+- @tanstack/react-query, @tanstack/react-table
+- framer-motion
+- next-auth (using custom auth)
+- next-intl
+- react-markdown, react-syntax-highlighter
+- uuid (Prisma provides UUID)
+- z-ai-web-dev-sdk
+- zustand
+- date-fns
+- @hookform/resolvers
+- sharp (provided by Vercel runtime)
+
+Kept (used by shadcn/ui components):
+- embla-carousel-react, next-themes, react-resizable-panels
+- vaul, cmdk, input-otp, react-day-picker
+- react-hook-form, recharts, sonner
+- zod, @hookform/resolvers (kept for future use)
